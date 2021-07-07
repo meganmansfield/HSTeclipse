@@ -1,0 +1,14 @@
+#HST emission spectrum of CoRoT-2b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2014ApJ...783..113W/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.125	248.6	86.0
+1.169	366.7	109.6
+1.218	309.0	83.2
+1.278	313.5	60.5
+1.324	279.9	56.8
+1.369	376.2	60.1
+1.424	480.9	65.5
+1.475	304.8	80.3
+1.525	454.6	63.4
+1.574	632.1	61.9
+1.619	414.0	73.8

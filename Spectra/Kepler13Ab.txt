@@ -1,0 +1,17 @@
+#HST emission spectrum of Kepler-13Ab, as shown in Figure 1
+#Original data reduction for this paper (Mansfield et al., 2020)
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1392	579.7	106.3
+1.1778	698.2	103.4
+1.2164	666.0	101.8
+1.2550	866.2	102.7
+1.2935	991.9	105.7
+1.3321	932.3	105.8
+1.3707	821.0	107.3
+1.4092	878.6	111.6
+1.4478	856.6	114.1
+1.4864	895.5	118.3
+1.5250	1133.1	124.2
+1.5635	977.1	128.3
+1.6021	1362.6	131.4
+1.6407	967.4	140.3

@@ -1,0 +1,18 @@
+#HST emission spectrum of KELT-7b, as shown in Supplementary Figure 2
+#Data from https://ui.adsabs.harvard.edu/abs/2017AJ....154..158B/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.142	662.	71.
+1.178	507.	65.
+1.213	814.	65.
+1.248	728.	66.
+1.283	798.	66.
+1.318	838.	70.
+1.352	684.	67.
+1.388	640.	66.
+1.422	767.	71.
+1.458	684.	78.
+1.493	755.	72.
+1.528	688.	75.
+1.562	850.	71.
+1.598	994.	78.
+1.632	1094.	78.

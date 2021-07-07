@@ -1,0 +1,17 @@
+#HST emission spectrum of WASP-76b, as shown in Figure 1
+#Original data reduction for this paper (Mansfield et al., 2020)
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1392 424.3 43.7
+1.1778 589.4 33.4
+1.2164 613.8 37.0
+1.2550 533.0 35.0
+1.2935 644.8 35.4
+1.3321 722.8 32.9
+1.3707 803.6 32.9
+1.4092 738.6 35.8
+1.4478 980.3 36.9
+1.4864 1027.2 34.8
+1.5250 993.3 36.6
+1.5635 1273.0 40.5
+1.6021 969.9 44.9
+1.6407 909.1 47.0

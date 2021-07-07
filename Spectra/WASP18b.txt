@@ -1,0 +1,17 @@
+#HST emission spectrum of WASP-18b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2018ApJ...855L..30A/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.15643 775. 20.
+1.18929 874. 20.
+1.22214 908. 20.
+1.255 908. 19.
+1.28786 940. 19.
+1.32071 989. 20.
+1.35357 1050. 20.
+1.38643 1105. 20.
+1.41929 1141. 21.
+1.45214 1131. 21.
+1.485 1190. 21.
+1.51786 1237. 21.
+1.55071 1171. 23.
+1.58357 1205. 24.

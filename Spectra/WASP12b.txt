@@ -1,0 +1,14 @@
+#HST emission spectrum of WASP-12b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2014ApJ...791...36S/abstract
+#Wavelength[microns]	Flux[ppm]	Error[ppm]
+1.125	1190.	170.
+1.175	1280.	120.
+1.225	1010.	120.
+1.275	1420.	110.
+1.325	1540.	120.
+1.375	1560.	120.
+1.425	1840.	120.
+1.475	1980.	120.
+1.525	1960.	130.
+1.575	1790.	140.
+1.625	1920.	170.

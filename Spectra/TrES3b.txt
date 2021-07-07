@@ -1,0 +1,13 @@
+#HST emission spectrum of TrES-3b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2014ApJ...785..148R/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1625	420.	270.
+1.213	360.	220.
+1.2605	360.	190.
+1.307	350.	220.
+1.3525	480.	260.
+1.399	510.	230.
+1.447	380.	190.
+1.497	650.	140.
+1.5505	580.	190.
+1.608	710.	160.

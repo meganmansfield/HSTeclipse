@@ -1,0 +1,13 @@
+#HST emission spectrum of WASP-4b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2014ApJ...785..148R/abstract
+#Wavelength [microns]	Flux[ppm]	Error[ppm]
+1.1315	300.	130.
+1.1845	320.	160.
+1.2335	710.	150.
+1.28	630.	150.
+1.3255	600.	150.
+1.3715	510.	160.
+1.419	810.	140.
+1.4685	740.	150.
+1.5205	920.	130.
+1.5765	800.	140.

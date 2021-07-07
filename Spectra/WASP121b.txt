@@ -1,0 +1,17 @@
+#HST emission spectrum of WASP-121b, as shown in Figure 1
+#Original data reduction for this paper (Mansfield et al., 2020)
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1392 913.5 31.6
+1.1778 955.8 32.4
+1.2164 1009.3 33.0
+1.2550 1001.4 29.2
+1.2935 995.9 29.7
+1.3321 1079.2 32.0
+1.3707 1205.9 29.8
+1.4092 1309.1 30.5
+1.4478 1266.3 31.2
+1.4864 1362.0 31.5
+1.5250 1310.5 35.5
+1.5635 1369.9 35.7
+1.6021 1352.3 38.9
+1.6407 1321.6 40.3

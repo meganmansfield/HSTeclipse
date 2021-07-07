@@ -1,0 +1,13 @@
+#HST emission spectrum of WASP-103b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2018AJ....156...17K/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.175	1259.	47.
+1.225	1448.	46.
+1.275	1480.	46.
+1.325	1498.	45.
+1.375	1661.	48.
+1.425	1718.	47.
+1.475	1667.	48.
+1.525	1623.	50.
+1.575	1749.	52.
+1.625	1843.	56.

@@ -1,0 +1,13 @@
+#HST emission spectrum of HD 209458b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2016AJ....152..203L/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1515	43	16
+1.204	97	15
+1.256	115	15
+1.3085	109	15
+1.3615	80	15
+1.414	43	15
+1.466	86	15
+1.5185	107	17
+1.5715	167	17
+1.624	170	18

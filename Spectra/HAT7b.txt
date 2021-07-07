@@ -1,0 +1,17 @@
+#HST emission spectrum of HAT-P-7b, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2018AJ....156...10M/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.13892 334. 37.
+1.17678 413. 38.
+1.21464 404. 37.
+1.2525 501. 37.
+1.29035 503. 38.
+1.32821 498. 37.
+1.36607 530. 37.
+1.40392 510. 37.
+1.44178 547. 39.
+1.47964 621. 41.
+1.5175 607. 42.
+1.55535 593. 44.
+1.59321 594. 46.
+1.63107 593. 45.

@@ -1,0 +1,17 @@
+#HST emission spectrum of HAT-P-41b, as shown in Figure 1
+#Original data reduction for this paper (Mansfield et al., 2020)
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.1392	207.4	156.9
+1.1778	460.7	140.2
+1.2164	621.7	91.4
+1.2550	545.2	95.4
+1.2935	452.0	84.0
+1.3321	503.0	78.7
+1.3707	589.7	80.7
+1.4092	515.2	82.3
+1.4478	561.1	84.0
+1.4864	500.6	87.3
+1.5250	666.1	88.8
+1.5635	612.8	96.5
+1.6021	686.9	95.7
+1.6407	732.9	106.3

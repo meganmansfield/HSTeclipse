@@ -1,0 +1,17 @@
+#HST emission spectrum of HAT-P-32Ab, as shown in Figure 1
+#Data from https://ui.adsabs.harvard.edu/abs/2018MNRAS.474.1705N/abstract
+#Wavelength[microns]	Fp/Fs[ppm]	Error[ppm]
+1.142	344.	101.5
+1.1795	305.	126.
+1.2165	448.	99.
+1.2535	244.	82.
+1.2905	248.	112.5
+1.328	502.	87.
+1.3655	611.	118.5
+1.4025	570.	86.5
+1.4395	473.	99.5
+1.4765	377.	95.
+1.514	564.	96.
+1.5515	464.	111.
+1.5885	664.	112.
+1.6255	592.	130.
