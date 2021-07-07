@@ -1,0 +1,2 @@
+#Planets in alphabetical order: CoRoT-2b, HAT-P-7b, HAT-P-32Ab, HAT-P-41b, HD 189733b, HD 209458b, KELT-7b, Kepler-13Ab, TrES-3b, WASP-4b, WASP-12b, WASP-18b, WASP-33b, WASP-43b, WASP-74b, WASP-76b, WASP-79b, WASP-103b, WASP-121b
+#Stellar Teff [K]	Teff Error [K]	Stellar log(g)	Stellar [M/H]	rp/rs	a/rs	
