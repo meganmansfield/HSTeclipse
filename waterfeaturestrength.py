@@ -1,4 +1,4 @@
-#UP TO DATE COPY 10/14/20
+#UP TO DATE COPY 7/12/21
 import pysynphot as S
 import numpy as np 
 import pdb
@@ -27,12 +27,6 @@ edgewave3=1.35
 edgewave4=1.48
 edgewave5=1.53
 edgewave6=1.61
-# edgewave1=1.18
-# edgewave2=1.33
-# edgewave3=1.33
-# edgewave4=1.49
-# edgewave5=1.49
-# edgewave6=1.57
 
 #the functions
 def blackbodyintegrate(wavelength1,wavelength2,temp):
@@ -84,17 +78,6 @@ def colormagmod(outpoint1,outpoint2,inpoint):
 	fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
 	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint))
 
-def colormagJHK(Jpoint,Hpoint,Kpoint):
-	#1.250,1.635,2.120	0.16,0.29,0.34
-	outflux=np.array([Hpoint,Kpoint])
-	wave=np.array([1.250,1.635])
-	diff2=np.array([0.16,0.29])
-	params0=np.array([1000.])
-	mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
-	fakeinflux=make_bbod(np.array([1.245]),np.array([0.17]),mpfit[0][0])
-	#return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(Jpoint))
-	return mpfit[0][0],np.log10(Jpoint),np.log10(Jpoint)-np.log10(Hpoint)
-
 def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
 	outflux=np.array([outpoint1,outpoint2])
 	wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
@@ -112,7 +95,6 @@ def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
 	temp=inpoint*(Fs[2]-Fs2[2])/Fs[2]
 	cinerr=np.sqrt(inerr**2.+temp**2.)
 	netoerr=np.sqrt(couterr1**2.+couterr2**2.)
-	#print(couterr1,couterr2,inerr)
 	magerr=np.log10((netoerr+fakeinflux)/fakeinflux)
 	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+cinerr**2./(inpoint**2.*np.log(10.)**2.))
 	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint)),magerr,colorerr
@@ -127,12 +109,10 @@ def colormagbd(outpoint1,outpoint2,inpoint,outerr1,outerr2,inerr):
 	netoerr=np.sqrt(outerr1**2.+outerr2**2.)
 	magerr=np.log10((netoerr+fakeinflux)/fakeinflux)
 	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+inerr**2./(inpoint**2.*np.log(10.)**2.))
-	#pdb.set_trace()
 	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint)),magerr,colorerr
 
 #define the small spacing grid in wavelength
 masterwavegrid=np.linspace(1.0,2.0,2000) #microns
-masterwavegrid2=np.linspace(0.8,5.0,4000)
 
 diff=np.diff(masterwavegrid)[0]
 outset1=np.where((masterwavegrid>edgewave1)&(masterwavegrid<edgewave2))
@@ -148,35 +128,25 @@ flist_highCO=glob.glob('../a_new_new_grid/CtoO/*0.85_spec.txt')
 flist_delayTiO2000=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_2000*spec.txt')
 flist_delayTiO2500=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_2500*spec.txt')
 flist_delayTiO3000=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_3000*spec.txt')
-# flist_delayTiO2800=glob.glob('./a_new_grid_dump/DELAYED_TiO_VO/*DELAYED_TiO_VO_2800*spec.txt')
-# flist_delayTiO3600=glob.glob('./a_new_grid_dump/DELAYED_TiO_VO/*DELAYED_TiO_VO_3600*spec.txt')
 flist_grav20=glob.glob('../a_new_new_grid/LOGG/LOGG_2.0_*spec.txt')
 flist_grav40=glob.glob('../a_new_new_grid/LOGG/LOGG_4.0_*spec.txt')
-#flist_grav40=glob.glob('./a_new_grid_dump/GRAVITY/*LOGG_2.0_spec.txt')
 flist_metneg15=glob.glob('../a_new_new_grid/METALICITY/*logZ_-1.5*spec.txt')
-#flist_metpos1=glob.glob('./a_new_grid_dump/METALLICITY/*logZ_-1.5*spec.txt')
 flist_metpos15=glob.glob('../a_new_new_grid/METALICITY/*logZ_+1.5*spec.txt')
-# flist_star3300=glob.glob('./a_new_grid_dump/STELLAR_TEFF/*TSTAR_3300*spec.txt')
-# flist_star4300=glob.glob('./a_new_grid_dump/STELLAR_TEFF/*TSTAR_4300*spec.txt')
-# flist_star6300=glob.glob('./a_new_grid_dump/STELLAR_TEFF/*TSTAR_6300*spec.txt')
-# flist_star7200=glob.glob('./a_new_grid_dump/STELLAR_TEFF/*TSTAR_7200*spec.txt')
-# flist_star8200=glob.glob('./a_new_grid_dump/STELLAR_TEFF/*TSTAR_8200*spec.txt')
-# flist_tint1percent=glob.glob('./a_new_grid_dump/TINT_TREND/*TINT_TRENDS_1percent_eff*spec.txt')
 flist_tintTF18=glob.glob('../a_new_new_grid/TINT_TREND/*TF18_TINT*spec.txt')
 flist_quench=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*NOCLOUD*spec.txt')
 flist_fsedlow=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*fsed_0.1*spec.txt')
 flist_fsedhigh=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*fsed_1.0*spec.txt')
-flist_bd=glob.glob('../BD_Mods/FIDUCIAL/*spec.txt')
-flist_bdmetpos1=glob.glob('../BD_Mods/logMet+1/*spec.txt')
-flist_bdmetneg1=glob.glob('../BD_Mods/logMet-1/*spec.txt')
-flist_bdlogg3=glob.glob('../BD_Mods/logg3/*spec.txt')
-flist_bdlogg4=glob.glob('../BD_Mods/logg4/*spec.txt')
-
 flist_star3300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_3300*spec.txt')
 flist_star4300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_4300*spec.txt')
 flist_star6300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_6300*spec.txt')
 flist_star7200=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_7200*spec.txt')
 flist_star8200=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_8200*spec.txt')
+
+flist_bd=glob.glob('../BD_Mods/FIDUCIAL/*spec.txt')
+flist_bdmetpos1=glob.glob('../BD_Mods/logMet+1/*spec.txt')
+flist_bdmetneg1=glob.glob('../BD_Mods/logMet-1/*spec.txt')
+flist_bdlogg3=glob.glob('../BD_Mods/logg3/*spec.txt')
+flist_bdlogg4=glob.glob('../BD_Mods/logg4/*spec.txt')
 
 fpmods_fiducial=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_lowCO=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
@@ -184,24 +154,20 @@ fpmods_highCO=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0])
 fpmods_delayTiO2000=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_delayTiO2500=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_delayTiO3000=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-# fpmods_delayTiO2800=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-# fpmods_delayTiO3600=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_grav20=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-#fpmods_grav35=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_grav40=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_metneg15=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-#fpmods_metpos1=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_metpos15=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_star3300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
 fpmods_star4300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
 fpmods_star6300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
 fpmods_star7200=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
 fpmods_star8200=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-# fpmods_tint1percent=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_tintTF18=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_quench=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_fsedlow=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
 fpmods_fsedhigh=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
+
 fpmods_bd=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bd)[0]))
 fpmods_bdmetpos1=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdmetpos1)[0]))
 fpmods_bdmetneg1=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdmetneg1)[0]))
@@ -209,10 +175,8 @@ fpmods_bdlogg3=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdlogg3)[0])
 fpmods_bdlogg4=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdlogg4)[0]))
 bdtemplist=np.array([1000.,1200.,1400.,1600.,1800.,2000.,2200.,2400.,2600.,2800.])
 
-longfiducial=np.zeros((np.shape(masterwavegrid2)[0],np.shape(flist_fiducial)[0]))
-# fpmods_fiducialJHK=np.zeros((np.shape(masterwavegrid2)[0],np.shape(flist_fiducial)[0]))
 #to plot Mike's models all pretty
-tplist_fiducial=glob.glob('./a_grid_dump/FIDUCIAL/*TP_GAS.txt')
+tplist_fiducial=glob.glob('../a_grid_dump/FIDUCIAL/*TP_GAS.txt')
 mikemods=np.zeros((1406,np.shape(flist_fiducial)[0]))
 miketp=np.zeros((69,np.shape(flist_fiducial)[0]))
 
@@ -224,8 +188,6 @@ for f in flist_fiducial:
 	mikewaves=mike[:,0]	#microns
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_fiducial[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-	longfiducial[:,placer]=np.interp(masterwavegrid2,mikewaves,mikefluxpl)
-	# fpmods_fiducialJHK[:,placer]=np.interp(masterwavegrid2,mikewaves,mikefluxpl)
 	mikemods[:,placer]=mike[:,1]*10**7.	#erg/s/m^2/m
 for f in tplist_fiducial:
 	mike=np.loadtxt(f)
@@ -274,22 +236,6 @@ for f in flist_delayTiO3000:
 	mikewaves=mike[:,0]	#microns
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_delayTiO3000[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-# for f in flist_delayTiO2800:
-# 	mike=np.loadtxt(f)
-# 	s1=f.split('_')
-# 	inds1=np.where(np.array(s1)=='Tirr')[0]
-# 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-# 	mikewaves=mike[:,0]	#microns
-# 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-# 	fpmods_delayTiO2800[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-# for f in flist_delayTiO3600:
-# 	mike=np.loadtxt(f)
-# 	s1=f.split('_')
-# 	inds1=np.where(np.array(s1)=='Tirr')[0]
-# 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-# 	mikewaves=mike[:,0]	#microns
-# 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-# 	fpmods_delayTiO3600[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
 for f in flist_grav20:
 	mike=np.loadtxt(f)
 	s1=f.split('_')
@@ -298,14 +244,6 @@ for f in flist_grav20:
 	mikewaves=mike[:,0]	#microns
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_grav20[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-# for f in flist_grav35:
-# 	mike=np.loadtxt(f)
-# 	s1=f.split('_')
-# 	inds1=np.where(np.array(s1)=='Tirr')[0]
-# 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-# 	mikewaves=mike[:,0]	#microns
-# 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-# 	fpmods_grav35[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
 for f in flist_grav40:
 	mike=np.loadtxt(f)
 	s1=f.split('_')
@@ -322,14 +260,6 @@ for f in flist_metneg15:
 	mikewaves=mike[:,0]	#microns
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_metneg15[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-# for f in flist_metpos1:
-# 	mike=np.loadtxt(f)
-# 	s1=f.split('_')
-# 	inds1=np.where(np.array(s1)=='Tirr')[0]
-# 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-# 	mikewaves=mike[:,0]	#microns
-# 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-# 	fpmods_metpos1[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
 for f in flist_metpos15:
 	mike=np.loadtxt(f)
 	s1=f.split('_')
@@ -378,14 +308,6 @@ for f in flist_star8200:
 	mikewaves=mike[:,0]	#microns
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_star8200[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-# for f in flist_tint1percent:
-# 	mike=np.loadtxt(f)
-# 	s1=f.split('_')
-# 	inds1=np.where(np.array(s1)=='Tirr')[0]
-# 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-# 	mikewaves=mike[:,0]	#microns
-# 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-# 	fpmods_tint1percent[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
 for f in flist_tintTF18:
 	mike=np.loadtxt(f)
 	s1=f.split('_')
@@ -459,98 +381,21 @@ for f in flist_bdlogg4:
 	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
 	fpmods_bdlogg4[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
 
-#plotting Mike's models
-n=np.shape(templist)[0]
-colors=pl.cm.plasma(np.linspace(0,0.9,n))
-
-sp = S.Icat('k93models',5300.,0.0,4.0)	#Parameters go temp, metallicity, logg
-sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-wave=sp.wave*10.**-10*10.**6.  #in microns
-flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-cflux= np.interp(mikewaves,wave,flux)
-
-# #make blackbodies to compare Mike's models to
-# blackT=np.linspace(1000,3600,14)
-# blackfpfs=np.zeros((np.shape(mikewaves)[0],np.shape(blackT)[0]))
-# for i in np.arange(np.shape(blackT)[0]):
-# 	blackfpfs[:,i]=fakedata_bbod(mikewaves*10**-6.,blackT[i])
-
-#load in TP profiles for the gap
-# W74fid=np.loadtxt('./thegapmods/WASP-074redist_trend_FIDUCIAL_redist_1.9636490392910262_logZ_+0.0_CtoO_0.55_TP_for_VUL.txt')
-# W74noTiO=np.loadtxt('./thegapmods/WASP-074redist_trend_noTiV_redist_1.9636490392910262_logZ_+0.0_CtoO_0.55_TP_for_VUL.txt')
-# W74highCO=np.loadtxt('./thegapmods/WASP-074redist_trend_CtO_redist_1.9636490392910262_logZ_+0.0_CtoO_1.0_TP_for_VUL.txt')
-# W76fid=np.loadtxt('./thegapmods/WASP-076redist_trend_FIDUCIAL_redist_2.1176397024682183_logZ_+0.0_CtoO_0.55_TP_for_VUL.txt')
-# W76noTiO=np.loadtxt('./thegapmods/WASP-076redist_trend_noTiV_redist_2.1176397024682183_logZ_+0.0_CtoO_0.55_TP_for_VUL.txt')
-# W76highCO=np.loadtxt('./thegapmods/WASP-076redist_trend_CtO_redist_2.1176397024682183_logZ_+0.0_CtoO_1.0_TP_for_VUL.txt')
-
-# rc('axes',linewidth=2)
-# plt.figure(figsize=(12,7))
-# for i in np.arange(np.shape(templist)[0]/2.)*2.:
-# 	plt.plot(mikewaves,mikemods[:,int(i)],color=colors[int(i)],linewidth=3,zorder=1) #/cflux*0.1**2.
-# 	# if i==20:
-# 	# 	plt.plot(mikewaves,mikemods[:,int(i)],color='k',linewidth=12,alpha=0.3,zorder=0)
-# 	# elif i==24:
-# 	# 	plt.plot(mikewaves,mikemods[:,int(i)],color='k',linewidth=12,alpha=0.3,zorder=0)
-# # for i in np.arange(np.shape(blackT)[0]):
-# 	#plt.plot(mikewaves,blackfpfs[:,i]/cflux,color='k',linestyle='--',linewidth=2)
-# plt.xlim((1.0,1.8))
-# plt.axvspan(1.22,1.33,color='k',alpha=0.2,zorder=0)
-# plt.axvspan(1.53,1.61,color='k',alpha=0.2,zorder=0)
-# plt.axvspan(1.35,1.48,color='k',alpha=0.2,zorder=0)
-# plt.yscale('log')
-# # plt.ylim((4*10.**-10.,3*10**-3.))
-# plt.ylim((1.*10.**13.,7.*10**19.))
-# plt.xlabel('Wavelength [$\mu$m]',fontsize=20)
-# plt.ylabel('Planet Flux [erg/s/m$^{3}$]',fontsize=20)
-# # plt.ylabel('Eclipse Depth',fontsize=20)
-# plt.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# #plt.tight_layout()
-# plt.show()
-
-# plt.figure(figsize=(12,7))
-# for i in np.arange(np.shape(templist)[0]/2.)*2.:
-# 	plt.plot(miketp[:,int(i)],mikepressures,color=colors[int(i)],linewidth=3,zorder=1)
-# 	# if i==20:
-# 	# 	plt.plot(miketp[:,int(i)],mikepressures,color='k',linewidth=12,zorder=0,alpha=0.3)
-# 	# elif i==24:
-# 	# 	plt.plot(miketp[:,int(i)],mikepressures,color='k',linewidth=12,zorder=0,alpha=0.3)
-# # plt.plot(W74fid[:,1],W74fid[:,0]*10**-6.,color='k',linewidth=3)
-# # plt.plot(W74noTiO[:,1],W74noTiO[:,0]*10**-6.,color='k',linewidth=3)
-# # plt.plot(W74highCO[:,1],W74highCO[:,0]*10**-6.,color='k',linewidth=3)
-# # plt.plot(W76fid[:,1],W76fid[:,0]*10**-6.,color='g',linewidth=3)
-# # plt.plot(W76noTiO[:,1],W76noTiO[:,0]*10**-6.,color='g',linewidth=3)
-# # plt.plot(W76highCO[:,1],W76highCO[:,0]*10**-6.,color='g',linewidth=3)
-# plt.xlim((500,4000))
-# plt.yscale('log')
-# plt.ylim((2*10.**2,5*10.**-4.))
-# plt.xlabel('Temperature [K]',fontsize=20)
-# plt.ylabel('Pressure [bar]',fontsize=20)
-# plt.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# #plt.tight_layout()
-# plt.show()
-
 color_fiducial=np.zeros((np.shape(flist_fiducial)[0],3))
 color_lowCO=np.zeros((np.shape(flist_lowCO)[0],3))
 color_highCO=np.zeros((np.shape(flist_highCO)[0],3))
 color_delayTiO2000=np.zeros((np.shape(flist_delayTiO2000)[0],3))
 color_delayTiO2500=np.zeros((np.shape(flist_delayTiO2500)[0],3))
 color_delayTiO3000=np.zeros((np.shape(flist_delayTiO3000)[0],3))
-# color_delayTiO2800=np.zeros((np.shape(flist_delayTiO2800)[0],3))
-# color_delayTiO3600=np.zeros((np.shape(flist_delayTiO3600)[0],3))
 color_grav20=np.zeros((np.shape(flist_grav20)[0],3))
-#color_grav35=np.zeros((np.shape(flist_grav35)[0],3))
 color_grav40=np.zeros((np.shape(flist_grav40)[0],3))
 color_metneg15=np.zeros((np.shape(flist_metneg15)[0],3))
-#color_metpos1=np.zeros((np.shape(flist_metpos1)[0],3))
 color_metpos15=np.zeros((np.shape(flist_metpos15)[0],3))
 color_star3300=np.zeros((np.shape(flist_star3300)[0],3))
 color_star4300=np.zeros((np.shape(flist_star4300)[0],3))
 color_star6300=np.zeros((np.shape(flist_star6300)[0],3))
 color_star7200=np.zeros((np.shape(flist_star7200)[0],3))
 color_star8200=np.zeros((np.shape(flist_star8200)[0],3))
-# color_tint1percent=np.zeros((np.shape(flist_tint1percent)[0],3))
 color_tintTF18=np.zeros((np.shape(flist_tintTF18)[0],3))
 color_quench=np.zeros((np.shape(flist_quench)[0],3))
 color_fsedlow=np.zeros((np.shape(flist_fsedlow)[0],3))
@@ -561,42 +406,11 @@ color_bdmetneg1=np.zeros((np.shape(flist_bdmetneg1)[0],3))
 color_bdlogg3=np.zeros((np.shape(flist_bdlogg3)[0],3))
 color_bdlogg4=np.zeros((np.shape(flist_bdlogg4)[0],3))
 
-################ interpolate between models to get fake data
-# W19temp=2372.
-# W19planet=np.zeros(np.shape(masterwavegrid2)[0])
-# for i in np.arange(np.shape(masterwavegrid2)[0]):
-# 	W19planet[i]=np.interp(W19temp,color_fiducial[:,0],longfiducial[i,:])
-
-# sp = S.Icat('k93models',5503.,0.21,4.40)
-# sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-# wave=sp.wave*10.**-10  #in meters
-# flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-# interp=np.interp(masterwavegrid2,wave*10**6.,flux)
-
-# W19Fpfs=W19planet/interp*0.1409**2.
-
-# plt.figure()
-# plt.plot(masterwavegrid2,W19Fpfs*10**6.)
-# plt.xlabel('Microns')
-# plt.ylabel('Fp/Fs [ppm]')
-# plt.show()
-
-#testing out the JHK bands
-# color_fiducialJHK=np.zeros((np.shape(flist_fiducial)[0],3))
-
-# Jset=np.where((masterwavegrid2>1.17)&(masterwavegrid2<1.33))
-# Hset=np.where((masterwavegrid2>1.49)&(masterwavegrid2<1.78))
-# Kset=np.where((masterwavegrid2>1.95)&(masterwavegrid2<2.20))
-
 for i in np.arange(np.shape(flist_fiducial)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_fiducial[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_fiducial[:,i][outset2])
 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_fiducial[:,i][inset])
 	color_fiducial[i]=colormagmod(outpoint1,outpoint2,inpoint)
-	# Jpoint=trapezoidint(masterwavegrid2[Jset]*10**-6.,fpmods_fiducialJHK[:,i][Jset])
-	# Hpoint=trapezoidint(masterwavegrid2[Hset]*10**-6.,fpmods_fiducialJHK[:,i][Hset])
-	# Kpoint=trapezoidint(masterwavegrid2[Kset]*10**-6.,fpmods_fiducialJHK[:,i][Kset])
-	# color_fiducialJHK[i]=colormagJHK(Jpoint,Hpoint,Kpoint)
 for i in np.arange(np.shape(flist_lowCO)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_lowCO[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_lowCO[:,i][outset2])
@@ -622,26 +436,11 @@ for i in np.arange(np.shape(flist_delayTiO3000)[0]):
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO3000[:,i][outset2])
 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO3000[:,i][inset])
 	color_delayTiO3000[i]=colormagmod(outpoint1,outpoint2,inpoint)
-# for i in np.arange(np.shape(flist_delayTiO2800)[0]):
-# 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_delayTiO2800[:,i][outset1])
-# 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO2800[:,i][outset2])
-# 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO2800[:,i][inset])
-# 	color_delayTiO2800[i]=colormagmod(outpoint1,outpoint2,inpoint)
-# for i in np.arange(np.shape(flist_delayTiO3600)[0]):
-# 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_delayTiO3600[:,i][outset1])
-# 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO3600[:,i][outset2])
-# 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO3600[:,i][inset])
-# 	color_delayTiO3600[i]=colormagmod(outpoint1,outpoint2,inpoint)
 for i in np.arange(np.shape(flist_grav20)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_grav20[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_grav20[:,i][outset2])
 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_grav20[:,i][inset])
 	color_grav20[i]=colormagmod(outpoint1,outpoint2,inpoint)
-# for i in np.arange(np.shape(flist_grav35)[0]):
-# 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_grav35[:,i][outset1])
-# 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_grav35[:,i][outset2])
-# 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_grav35[:,i][inset])
-# 	color_grav35[i]=colormagmod(outpoint1,outpoint2,inpoint)
 for i in np.arange(np.shape(flist_grav40)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_grav40[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_grav40[:,i][outset2])
@@ -652,11 +451,6 @@ for i in np.arange(np.shape(flist_metneg15)[0]):
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_metneg15[:,i][outset2])
 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_metneg15[:,i][inset])
 	color_metneg15[i]=colormagmod(outpoint1,outpoint2,inpoint)
-# for i in np.arange(np.shape(flist_metpos1)[0]):
-# 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_metpos1[:,i][outset1])
-# 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_metpos1[:,i][outset2])
-# 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_metpos1[:,i][inset])
-	# color_metpos1[i]=colormagmod(outpoint1,outpoint2,inpoint)
 for i in np.arange(np.shape(flist_metpos15)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_metpos15[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_metpos15[:,i][outset2])
@@ -687,11 +481,6 @@ for i in np.arange(np.shape(flist_star8200)[0]):
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star8200[:,i][outset2])
 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star8200[:,i][inset])
 	color_star8200[i]=colormagmod(outpoint1,outpoint2,inpoint)
-# for i in np.arange(np.shape(flist_tint1percent)[0]):
-# 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_tint1percent[:,i][outset1])
-# 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_tint1percent[:,i][outset2])
-# 	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_tint1percent[:,i][inset])
-# 	color_tint1percent[i]=colormagmod(outpoint1,outpoint2,inpoint)
 for i in np.arange(np.shape(flist_tintTF18)[0]):
 	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_tintTF18[:,i][outset1])
 	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_tintTF18[:,i][outset2])
@@ -759,31 +548,14 @@ W76=np.loadtxt('../EclipsesPaper/WASP76_starcorr.txt') #percent
 W79=np.loadtxt('../EclipsesPaper/wasp79_new.txt') #percent
 W103=np.loadtxt('../EclipsesPaper/WASP103.txt') #ppm
 W121=np.loadtxt('../EclipsesPaper/wasp121_allvis.txt') #percent
-W77=np.loadtxt('../EclipsesPaper/wasp77.txt') #ppm
-
-
-
-# W103night=np.loadtxt('WASP103_night.txt') #ppm
-# W18night=np.loadtxt('WASP18_night.txt') #ppm
-# W43night=np.loadtxt('WASP43_night.txt') #ppm
-
-########### for proposals
-W121v2=np.loadtxt('../EclipsesPaper/old_data/WASP121_MikalEvans.txt') #ppm
-W76v2=np.loadtxt('../EclipsesPaper/old_data/WASP76_Edwards.txt') #ppm
-W76v3=np.loadtxt('../EclipsesPaper/old_data/WASP76_Fu.txt') #ppm
-Kep13v2=np.loadtxt('../EclipsesPaper/old_data/Kepler13A_Beatty.txt') #ppm
-K7v2=np.loadtxt('../EclipsesPaper/old_data/KELT7_Pluriel.txt') #ppm
 
 #downsample through interpolation to the master wavelength grid
 H7down=np.interp(masterwavegrid,H7[:,0],H7[:,1]*10.**-6.)
 H32down=np.interp(masterwavegrid,H32[:,0],H32[:,1]*10.**-6.)
 H41down=np.interp(masterwavegrid,H41[:,0],H41[:,1]*10.**-2.)
-# H41downv2=np.interp(masterwavegrid,H41v2[:,0],H41v2[:,1]*10.**-2.)
 HD189down=np.interp(masterwavegrid,HD189[:,0],HD189[:,1]*10.**-6.)
 HD209down=np.interp(masterwavegrid,HD209[:,0],HD209[:,1]*10.**-6.)
 K7down=np.interp(masterwavegrid,K7[:,0],K7[:,1]*10.**-2.)
-# K7downv2=np.interp(masterwavegrid,K7v2[:,0],K7v2[:,1]*10.**-2.)
-#Kep13down=np.interp(masterwavegrid,Kep13[:,0],Kep13[:,1]*10.**-6.)
 W18down=np.interp(masterwavegrid,W18[:,0],W18[:,1]*10.**-6.)
 W33down=np.interp(masterwavegrid,W33[:,0],W33[:,1]*10.**-6.)
 W43down=np.interp(masterwavegrid,W43[:,0],W43[:,1]*10.**-6.)
@@ -792,21 +564,9 @@ W76down=np.interp(masterwavegrid,W76[:,0],W76[:,1]*10.**-2.)
 W79down=np.interp(masterwavegrid,W79[:,0],W79[:,1]*10.**-2.)
 W103down=np.interp(masterwavegrid,W103[:,0],W103[:,1]*10.**-6.)
 W121down=np.interp(masterwavegrid,W121[:,0],W121[:,1]*10.**-2.)
-W77down=np.interp(masterwavegrid,W77[:,0],W77[:,1]*10.**-6.)
-
-W76downv2=np.interp(masterwavegrid,W76v2[:,0],W76v2[:,1]*10.**-6.)
-W76downv3=np.interp(masterwavegrid,W76v3[:,0],W76v3[:,1]*10.**-6.)
-W121downv2=np.interp(masterwavegrid,W121v2[:,0],W121v2[:,1]*10.**-6.)
-Kep13downv2=np.interp(masterwavegrid,Kep13v2[:,0],Kep13v2[:,1]*10.**-6.)
-K7downv2=np.interp(masterwavegrid,K7v2[:,0],K7v2[:,1]*10.**-6.)
-
-# W103nightdown=np.interp(masterwavegrid,W103night[:,0],W103night[:,1]*10.**-6.)
-# W18nightdown=np.interp(masterwavegrid,W18night[:,0],W18night[:,1]*10.**-6.)
-# W43nightdown=np.interp(masterwavegrid,W43night[:,0],W43night[:,1]*10.**-6.)
 
 C2down=np.interp(masterwavegrid,C2[:,0],C2[:,1]*10.**-6.)
 Kep13down=np.interp(masterwavegrid,Kep13[:,0],Kep13[:,1]*10.**-2.)
-# Kep13down=np.interp(masterwavegrid,Kep13[:,0],Kep13[:,1]*10.**-6.)
 T3down=np.interp(masterwavegrid,T3[:,0],T3[:,1]*10.**-6.)
 W4down=np.interp(masterwavegrid,W4[:,0],W4[:,1]*10.**-6.)
 W12down=np.interp(masterwavegrid,W12[:,0],W12[:,1]*10.**-6.)
@@ -854,38 +614,6 @@ inpointW103=np.mean(W103down[inset])
 outpoint1W121=np.mean(W121down[outset1])
 outpoint2W121=np.mean(W121down[outset2])
 inpointW121=np.mean(W121down[inset])
-outpoint1W77=np.mean(W77down[outset1])
-outpoint2W77=np.mean(W77down[outset2])
-inpointW77=np.mean(W77down[inset])
-
-outpoint1W76v2=np.mean(W76downv2[outset1])
-outpoint2W76v2=np.mean(W76downv2[outset2])
-inpointW76v2=np.mean(W76downv2[inset])
-outpoint1W76v3=np.mean(W76downv3[outset1])
-outpoint2W76v3=np.mean(W76downv3[outset2])
-inpointW76v3=np.mean(W76downv3[inset])
-outpoint1W121v2=np.mean(W121downv2[outset1])
-outpoint2W121v2=np.mean(W121downv2[outset2])
-inpointW121v2=np.mean(W121downv2[inset])
-outpoint1K7v2=np.mean(K7downv2[outset1])
-outpoint2K7v2=np.mean(K7downv2[outset2])
-inpointK7v2=np.mean(K7downv2[inset])
-outpoint1Kep13v2=np.mean(Kep13downv2[outset1])
-outpoint2Kep13v2=np.mean(Kep13downv2[outset2])
-inpointKep13v2=np.mean(Kep13downv2[inset])
-# outpoint1H41v2=np.mean(H41downv2[outset1])
-# outpoint2H41v2=np.mean(H41downv2[outset2])
-# inpointH41v2=np.mean(H41downv2[inset])
-
-# outpoint1W103night=np.mean(W103nightdown[outset1])
-# outpoint2W103night=np.mean(W103nightdown[outset2])
-# inpointW103night=np.mean(W103nightdown[inset])
-# outpoint1W18night=np.mean(W18nightdown[outset1])
-# outpoint2W18night=np.mean(W18nightdown[outset2])
-# inpointW18night=np.mean(W18nightdown[inset])
-# outpoint1W43night=np.mean(W43nightdown[outset1])
-# outpoint2W43night=np.mean(W43nightdown[outset2])
-# inpointW43night=np.mean(W43nightdown[inset])
 
 outpoint1C2=np.mean(C2down[outset1])
 outpoint2C2=np.mean(C2down[outset2])
@@ -923,7 +651,6 @@ def getcolor(Teff,Tserr,met,logg,rprs,outpoint1,outpoint2,inpoint,meanerr,dellam
 	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
 	Fpout2=outpoint2*starout2/rprs**2.
 	Fpin=inpoint*starin/rprs**2.
-	#print(Fpout1,Fpout2,Fpin)
 	Fs=np.array([starout1,starout2,starin])
 	Fs2=np.array([starout12,starout22,starin2])
 	color=colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
@@ -943,11 +670,9 @@ meanerrW76=np.mean(W76[:,2]*10.**-2.)
 meanerrW79=np.mean(W79[:,2]*10.**-2.)
 meanerrW103=np.mean(W103[:,2]*10.**-6.)
 meanerrW121=np.mean(W121[:,2]*10.**-2.)
-meanerrW77=np.mean(W77[:,2]*10.**-6.)
 
 meanerrC2=np.mean(C2[:,2]*10.**-6.)
 meanerrKep13=np.mean(Kep13[:,2]*10.**-2.)
-# meanerrKep13=np.mean(Kep13[:,2]*10.**-6.)
 meanerrT3=np.mean(T3[:,2]*10.**-6.)
 meanerrW4=np.mean(W4[:,2]*10.**-6.)
 meanerrW12=np.mean(W12[:,2]*10.**-6.)
@@ -972,7 +697,6 @@ dellamW76=np.mean(np.diff(W76[:,0]))
 dellamW79=np.mean(np.diff(W79[:,0]))
 dellamW103=np.mean(np.diff(W103[:,0]))
 dellamW121=np.mean(np.diff(W121[:,0]))
-dellamW77=np.mean(np.diff(W77[:,0]))
 
 dellamC2=np.mean(np.diff(C2[:,0]))
 dellamKep13=np.mean(np.diff(Kep13[:,0]))
@@ -1001,8 +725,6 @@ colorW76=getcolor(6250.,100.,0.23,4.128,0.10873,outpoint1W76,outpoint2W76,inpoin
 colorW79=getcolor(6600.,100.,0.03,4.2,0.1049,outpoint1W79,outpoint2W79,inpointW79,meanerrW79,dellamW79)
 colorW103=getcolor(6110.,160.,0.06,4.22,0.1093,outpoint1W103,outpoint2W103,inpointW103,meanerrW103,dellamW103)
 colorW121=getcolor(6460.,140.,0.13,4.2,0.1245,outpoint1W121,outpoint2W121,inpointW121,meanerrW121,dellamW121)
-# colorW77=getcolor(5605.,111.,0.07,4.49,0.13012,outpoint1W77,outpoint2W77,inpointW77,meanerrW77,dellamW77)
-colorW77=getcolor(5556.,107.,0.07,4.49,0.13012,outpoint1W77,outpoint2W77,inpointW77,meanerrW77,dellamW77)
 
 colorC2=getcolor(5575.,66.,-0.04,4.51,0.1626,outpoint1C2,outpoint2C2,inpointC2,meanerrC2,dellamC2)
 colorKep13=getcolor(7650.,250.,0.2,4.2,0.08047,outpoint1Kep13,outpoint2Kep13,inpointKep13,meanerrKep13,dellamKep13)
@@ -1156,68 +878,6 @@ delTbd=np.array([20,6.5,4,0.5,0.5,0.5,5.5,0.5,0.5,0.5,0.5,0.5,0.5,5,5,0.5,0.5,0.
 # 	color_tint1percent=color_tint1percent,color_tintTF18=color_tintTF18,colorH7=colorH7,colorH32=colorH32,colorH41=colorH41,\
 # 	colorHD189=colorHD189,colorHD209=colorHD209,colorK7=colorK7,colorW18=colorW18,colorW33=colorW33,colorW43=colorW43,\
 # 	colorW74=colorW74,colorW76=colorW76,colorW79=colorW79,colorW103=colorW103,colorW121=colorW121)
-
-############################################## ADD PROPOSED SURVEY PLANETS ########################
-def addasim(Tstar,Tstarerr,metstar,loggstar,rprs,Tp,scale):
-	sp = S.Icat('k93models',Tstar,metstar,loggstar)	#Parameters go temp, metallicity, logg
-	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave=sp.wave*10.**-10  #in meters
-	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp=np.interp(masterwavegrid,wave*10**6.,flux) #star in erg/s/m^3
-	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
-	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
-	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
-	sp2=S.Icat('k93models',Tstar+Tstarerr,metstar,loggstar)
-	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave2=sp2.wave*10.**-10  #in meters
-	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp2=np.interp(masterwavegrid,wave*10**6.,flux2) #star in erg/s/m^3
-	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
-	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
-	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
-	w77=fakedata_bbod(wave,Tp) #erg/s/m^2/m
-	interpp=np.interp(masterwavegrid,wave*10**6.,w77)
-	spectrum=interpp/interp*rprs**2.
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interpp[outset1]) #unit erg/s/m^2
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interpp[outset2]) #unit erg/s/m^2
-	inpoint=trapezoidint(masterwavegrid[inset]*10.**-6.,interpp[inset]) #unit erg/s/m^2
-	meanerr=meanerrW43*np.sqrt(5.)/scale 
-	dellam=dellamW43
-	Fs=np.array([starout1,starout2,starin])
-	Fs2=np.array([starout12,starout22,starin2])
-	# pdb.set_trace()
-	color=colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs)
-	#creal=np.interp(color[1],color_tint1percent[:,1],color_tint1percent[:,2])
-	creal=np.interp(color[1],color_fiducial[:,1],color_fiducial[:,2])
-	creal2=np.interp(color[1],color_grav20[:,1],color_grav20[:,2])
-	creal3=np.interp(color[1],color_grav40[:,1],color_grav40[:,2])
-	return color,creal,creal2,creal3,spectrum
-
-# colorW77,W77creal,W77creal2,W77creal3=addasim(5365.,-0.34,4.33,0.13012,1960.,1.392)#1913.
-# colorK231,K231creal,K231creal2,K231creal3=addasim(5280.,0.080,4.60,0.135,1778.,0.792)
-# # colorW95,W95creal=addasim(5830.,0.14,4.36,0.1005,1921.,0.629)
-# colorK4,K4creal,K4creal2,K4creal3=addasim(6206.,-0.116,4.108,0.1089,2154.,1.128)
-# colorH32f,H32fcreal,H32fcreal2,H32fcreal3=addasim(6001.,-0.16,4.22,0.14886,1935.,0.709)
-# colorK3,K3creal,K3creal2,K3creal3=addasim(6304.,0.05,4.20,0.0939,2149.,0.789)
-# colorH36,H36creal,H36creal2,H36creal3=addasim(5620.,0.26,4.37,0.1199,2108.,0.595)
-
-#brian proposal
-colorMA1,MA1creal,MA1creal2,MA1creal3,MA1spectrum=addasim(7554,138.,0.0,4.2,0.0735,3170.,4.4)#3025.,2.522)
-colorK16,K16creal,K16creal2,K16creal3,K16spectrum=addasim(6236.,139.,0.0,4.2,0.1070,2920.,2.1)#2929.,1.780)
-colorK20,K20creal,K20creal2,K20creal3,K20spectrum=addasim(8720.,131.,0.0,4.2,0.1144,2680.,5.1)#2695.,3.558)
-colorW3,W3creal,W3creal2,W3creal3,W3spectrum=addasim(6400.,144.,0.04,4.42,0.1051,2360.,1.5)#2356.,1.232)
-# colorW173,W173creal,W173creal2,W173creal3=addasim(5800.,0.0,4.2,0.1203,2230.,1.3)#2218.,1.104)
-# colorW14,W14creal,W14creal2,W14creal3=addasim(6475.,0.0,4.07,0.0972,2210.,1.7)#2200.,0.927)
-colorK11,K11creal,K11creal2,K11creal3,K11spectrum=addasim(5375.,25.,0.17,3.7,0.0514,2060.,2.2)#2005.,0.844)
-colorK8,K8creal,K8creal2,K8creal3,K8spectrum=addasim(5754.,70.,0.27,4.08,0.1145,1990.,1.3)#1971.,0.823)
-# colorW77,W77creal,W77creal2,W77creal3=addasim(5365.,-0.34,4.33,0.13012,1990.,2.1)
-colorC2,C2creal,C2creal2,C2creal3,C2spectrum=addasim(5625.,49.,-0.09,4.73,0.161,1830.,0.9)#1799.,0.604)
-# colorK23,K23creal,K23creal2,K23creal3=addasim(5899.,-0.105,4.417,0.1365,1561.,1.2)#1832.,0.864)
-colorXO3,XO3creal,XO3creal2,XO3creal3,XO3spectrum=addasim(6429.,150.,-0.18,4.7,0.1005,2175.,0.9)
-colorW140,W140creal,W140creal2,W140creal3,W140spectrum=addasim(5260.,78.,0.12,4.51,0.1664,1561.,0.7)
-
-# #add for Kevin proposal
-# colorLTT,LTTcreal,LTTcreal2,LTTcreal3,LTTspectrum=addasim(5443.,14.,0.27,4.35,0.0445,2336.,0.537)
 
 ################################################# MAKE PLOTS ###################################
 # interpset=mikemodssorth209[:,4:8]
@@ -1429,7 +1089,7 @@ fillbd=np.interp(color_bdlogg3[:,0],color_bdmetneg1[:,0],color_bdmetneg1[:,2])
 
 #adding colormap for equilibrium temps
 # equtemps=np.array([2241.,1898.,1935.,1216.,1451.,2047.,2550.,2383.,2780.,1448.,1921.,2169.,1867.,2504.,2358.])	#H7,H32,H41,HD189,HD209,K7,Kep13,W18,W33,W43,W74,W76,W79,W103,W121
-equtemps=np.array([2241.,1898.,1935.,1216.,1451.,2047.,2550.,2383.,2780.,1448.,1921.,2169.,1867.,2504.,2358.,1522.,1590.,1666.,2550.,2498.,1701.])	#H7,H32,H41,HD189,HD209,K7,Kep13,W18,W33,W43,W74,W76,W79,W103,W121,C2,T3,W4,Kep13,W12, W77
+equtemps=np.array([2241.,1898.,1935.,1216.,1451.,2047.,2550.,2383.,2780.,1448.,1921.,2169.,1867.,2504.,2358.,1522.,1590.,1666.,2550.,2498.])	#H7,H32,H41,HD189,HD209,K7,Kep13,W18,W33,W43,W74,W76,W79,W103,W121,C2,T3,W4,Kep13,W12
 vmin=np.min(equtemps)
 vmax=np.max(equtemps)+200
 normequtemps=(equtemps-vmin)/np.max(equtemps-vmin)
@@ -1538,10 +1198,6 @@ ax1.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,mec=scalar
 ax1.text(colorKep13[2]+0.03,colorKep13[0]-100,'Kepler-13Ab',color=scalarMap.to_rgba(equtemps[18]),fontsize=15,zorder=3,bbox=dict(facecolor='none',edgecolor='k'))#'xkcd:lilac'
 ax1.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,mec=scalarMap.to_rgba(equtemps[19]),mfc=scalarMap.to_rgba(equtemps[19]),ecolor=scalarMap.to_rgba(equtemps[19]),marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
 ax1.text(colorW12[2]+0.0555,colorW12[0]-20,'WASP-12b',color=scalarMap.to_rgba(equtemps[19]),fontsize=15,zorder=3)#'xkcd:lilac'
-# ax1.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,mec=scalarMap.to_rgba(equtemps[20]),mfc=scalarMap.to_rgba(equtemps[20]),ecolor=scalarMap.to_rgba(equtemps[20]),marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# ax1.text(colorW77[2]+0.0555,colorW77[0]-20,'WASP-77Ab',color=scalarMap.to_rgba(equtemps[20]),fontsize=15,zorder=3,bbox=dict(facecolor='none',edgecolor='k'))#'xkcd:lilac'
-# ax1.errorbar(LTTcreal,colorLTT[0],xerr=colorLTT[4],yerr=328.,color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax1.text(0.27,1940,'WASP-77Ab',color='r',fontsize=15,fontweight='bold')
 
 ####### adding brown dwarfs from Manjavacas ###########################
 for i in goodlist:
@@ -1556,6 +1212,7 @@ cbar.ax.tick_params(labelsize=15,width=2,length=6)
 cbar.set_label('Equilibrium Temperature',fontsize=15)
 
 plt.tight_layout()
+plt.savefig('Fig3.png',dpi=300)
 plt.show()
 ############### MAIN FIGURE TEMPERATURE END ##########################################
 
@@ -1563,265 +1220,12 @@ plt.show()
 
 colors=pl.cm.inferno(np.linspace(0,0.9,5))
 
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor=edgecolor,zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_lowCO[:,2],color_lowCO[:,0],color=colors[1],marker='.',label='C/O=0.01',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_highCO[:,2],color_highCO[:,0],color=colors[3],marker='.',label='C/O=0.85',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25) #($S_{H_{2}O}$)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1150,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Vary Planet C/O',fontsize=20)
-# plt.tight_layout()
-# plt.show()
-
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor=edgecolor,zorder=4,linewidth=3,markersize=15)
-# # plt.plot(color_delayTiO3600[:,2],color_delayTiO3600[:,0],color=colors[4],marker='.',label='TiO Delayed to 3600 K',markeredgecolor='k',zorder=3,linewidth=2,markersize=10)
-# # plt.plot(color_delayTiO2800[:,2],color_delayTiO2800[:,0],color=colors[3],marker='.',label='TiO Delayed to 2800 K',markeredgecolor='k',zorder=3,linewidth=2,markersize=10)
-# plt.plot(color_delayTiO3000[:,2],color_delayTiO3000[:,0],color=colors[4],marker='.',label='TiO/VO Delayed to 3000 K',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_delayTiO2500[:,2],color_delayTiO2500[:,0],color=colors[3],marker='.',label='TiO/VO Delayed to 2500 K',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_delayTiO2000[:,2],color_delayTiO2000[:,0],color=colors[2],marker='.',label='TiO/VO Delayed to 2000 K',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# # plt.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# # plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1150,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Delayed TiO/VO',fontsize=20)
-# plt.tight_layout()
-# plt.show()
-
-
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor=edgecolor,zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_grav20[:,2],color_grav20[:,0],color=colors[1],marker='.',label='log(g)=2.0',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# #plt.plot(color_grav35[:,2],color_grav35[:,1],color='xkcd:green',marker='.',label='log(g)=3.5',markeredgecolor='xkcd:dark green',zorder=2)
-# plt.plot(color_grav40[:,2],color_grav40[:,0],color=colors[3],marker='.',label='log(g)=4.0',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# # plt.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# # plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# # plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1150,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Vary Planet Gravity',fontsize=20)
-# plt.tight_layout()
-# plt.show()
-
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor=edgecolor,zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_metneg15[:,2],color_metneg15[:,0],color=colors[1],marker='.',label='[M/H]=-1.5',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# #plt.plot(color_metpos1[:,2],color_metpos1[:,1],color='xkcd:green',marker='.',label='[M/H]=1.0',markeredgecolor='xkcd:dark green',zorder=2)
-# plt.plot(color_metpos15[:,2],color_metpos15[:,0],color=colors[3],marker='.',label='[M/H]=1.5',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# # plt.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# # plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25) #($S_{H_{2}O}$)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1150,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Vary Planet Metallicity',fontsize=20)
-# plt.tight_layout()
-# plt.show()
-
 tempx=[x for _,x in sorted(zip(color_star3300[:,0],color_star3300[:,2]))]
 tempy=np.sort(color_star3300[:,0])
-
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor=edgecolor,zorder=4,linewidth=3,markersize=15)
-# plt.plot(tempx,tempy,color=colors[0],marker='.',label='T$_{eff}$=3300',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_star4300[:,2],color_star4300[:,0],color=colors[1],marker='.',label='T$_{eff}$=4300',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_star6300[:,2],color_star6300[:,0],color=colors[2],marker='.',label='T$_{eff}$=6300',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_star7200[:,2],color_star7200[:,0],color=colors[3],marker='.',label='T$_{eff}$=7200',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_star8200[:,2],color_star8200[:,0],color=colors[4],marker='.',label='T$_{eff}$=8200',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=11,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.yticks(ticks=[1500,2000,2500,3000,3500],labels=['1500','2000','2500','3000','3500'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# # plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1250,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Vary Stellar Temperature',fontsize=20)
-# plt.tight_layout()
-# plt.show()
-
-# plt.figure(figsize=(10,7))
-# plt.axvline(x=0.0,color='k',zorder=0)
-# plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# # plt.plot(color_tint1percent[:,2],color_tint1percent[:,0],color=colors[1],marker='.',label='1% Effective T$_{int}$',markeredgecolor='k',zorder=3,linewidth=2,markersize=10)
-# plt.plot(color_tintTF18[:,2],color_tintTF18[:,0],color=colors[3],marker='.',label='Thorngren et al. 2019',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH32[2],colorH32[0],xerr=colorH32[4],yerr=59,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# # plt.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW74[2],colorW74[0],xerr=colorW74[4],yerr=48,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW76[2],colorW76[0],xerr=colorW76[4],yerr=27,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW79[2],colorW79[0],xerr=colorW79[4],yerr=58,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW103[2],colorW103[0],xerr=colorW103[4],yerr=50,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW121[2],colorW121[0],xerr=colorW121[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorC2[2],colorC2[0],xerr=colorC2[4],yerr=42.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-# plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
-# ax=plt.gca()
-# ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
-# ax.set_yticklabels([],minor=True)
-# plt.ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
-# # plt.xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
-# plt.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-# plt.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.legend(fontsize=20)
-# plt.ylim((1150,3550))
-# plt.xlim((-0.2,0.5))
-# plt.title('Vary Internal Heating',fontsize=20)
-# plt.tight_layout()
-# plt.show()
 
 plt.figure(figsize=(10,7))
 plt.axvline(x=0.0,color='k',zorder=0)
 plt.plot(color_fiducial[:,2],color_fiducial[:,0],color=linecolor,marker='.',label='Fiducial',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
-# plt.plot(color_quench[:,2],color_quench[:,0],color=colors[4],marker='.',label='No Clouds',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
 plt.plot(color_fsedlow[:,2],color_fsedlow[:,0],color=colors[3],marker='.',label=r'$f_{sed}=0.1$',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
 plt.plot(color_fsedhigh[:,2],color_fsedhigh[:,0],color=colors[1],marker='.',label=r'$f_{sed}=1.0$',markeredgecolor='k',zorder=4,linewidth=3,markersize=15)
 plt.errorbar(colorH7[2],colorH7[0],xerr=colorH7[4],yerr=39,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
@@ -1830,7 +1234,6 @@ plt.errorbar(colorH41[2],colorH41[0],xerr=colorH41[4],yerr=66,color='k',marker='
 plt.errorbar(colorHD189[2],colorHD189[0],xerr=colorHD189[4],yerr=57,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorHD209[2],colorHD209[0],xerr=colorHD209[4],yerr=28,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorK7[2],colorK7[0],xerr=colorK7[4],yerr=54,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-# plt.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorW18[2],colorW18[0],xerr=colorW18[4],yerr=20,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorW33[2],colorW33[0],xerr=colorW33[4],yerr=26,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorW43[2],colorW43[0],xerr=colorW43[4],yerr=23,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
@@ -1844,8 +1247,7 @@ plt.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 plt.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 plt.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-plt.errorbar(colorW77[2],colorW77[0],xerr=colorW77[4],yerr=28.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
-plt.yticks(ticks=[1500,2000,2500,3000],labels=['1500','2000','2500','3000'])
+plt.yticks(ticks=[1500,2000,2500,3000,3500],labels=['1500','2000','2500','3000','3500'])
 ax=plt.gca()
 ax.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
 ax.set_yticklabels([],minor=True)
@@ -1858,6 +1260,7 @@ plt.ylim((1150,3550))
 plt.xlim((-0.2,0.5))
 plt.title('Vary Clouds',fontsize=20)
 plt.tight_layout()
+plt.savefig('clouds.png',dpi=300)
 plt.show()
 
 #################### END INDIVIDUAL MODEL PLOTS ####################################################################
@@ -1889,8 +1292,8 @@ ax1.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 ax1.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax1.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax1.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-ax1.set_yticks(ticks=[1500,2000,2500,3000])
-ax1.set_yticklabels(labels=['1500','2000','2500','3000'])
+ax1.set_yticks(ticks=[1500,2000,2500,3000,3500])
+ax1.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax1.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800,2900,3100,3200,3300,3400],minor=True)
 ax1.set_yticklabels(labels=['','','','','','','','','','','','','','','','','',''],minor=True)
 ax1.set_ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
@@ -1924,8 +1327,8 @@ ax2.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 ax2.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax2.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax2.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-ax2.set_yticks(ticks=[1500,2000,2500,3000])
-ax2.set_yticklabels(labels=['1500','2000','2500','3000'])
+ax2.set_yticks(ticks=[1500,2000,2500,3000,3500])
+ax2.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax2.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800,2900,3100,3200,3300,3400],minor=True)
 ax2.set_yticklabels(labels=['','','','','','','','','','','','','','','','','',''],minor=True)
 ax2.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
@@ -1996,8 +1399,8 @@ ax4.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 ax4.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax4.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax4.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-ax4.set_yticks(ticks=[1500,2000,2500,3000])
-ax4.set_yticklabels(labels=['1500','2000','2500','3000'])
+ax4.set_yticks(ticks=[1500,2000,2500,3000,3500])
+ax4.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax4.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
 ax4.set_yticklabels([],minor=True)
 ax4.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
@@ -2029,8 +1432,8 @@ ax5.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 ax5.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax5.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax5.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-ax5.set_yticks(ticks=[1500,2000,2500,3000])
-ax5.set_yticklabels(labels=['1500','2000','2500','3000'])
+ax5.set_yticks(ticks=[1500,2000,2500,3000,3500])
+ax5.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax5.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
 ax5.set_yticklabels([],minor=True)
 ax5.set_ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
@@ -2066,8 +1469,8 @@ ax6.errorbar(colorT3[2],colorT3[0],xerr=colorT3[4],yerr=97.,color='k',marker='.'
 ax6.errorbar(colorW4[2],colorW4[0],xerr=colorW4[4],yerr=62.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax6.errorbar(colorKep13[2],colorKep13[0],xerr=colorKep13[4],yerr=107.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
 ax6.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,color='k',marker='.',markersize=15,linestyle='none',linewidth=3,zorder=3)
-ax6.set_yticks(ticks=[1500,2000,2500,3000])
-ax6.set_yticklabels(labels=['1500','2000','2500','3000'])
+ax6.set_yticks(ticks=[1500,2000,2500,3000,3500])
+ax6.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax6.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
 ax6.set_yticklabels([],minor=True)
 ax6.set_xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
@@ -2079,7 +1482,7 @@ ax6.set_xlim((-0.2,0.5))
 ax6.set_title('Delayed TiO/VO',fontsize=20)
 
 plt.tight_layout()
-plt.savefig('individualmodels.png')
+plt.savefig('individualmodels.png',dpi=300)
 plt.show()
 
 ########################### END COMBO MODELS ############################################
@@ -2326,312 +1729,6 @@ xerrors=np.array([colorH7[4],colorH32[4],colorH41[4],colorHD189[4],colorHD209[4]
 #for i in np.arange(np.shape(xerrors)[0]):
 tarray=np.log(xerrors)
 colorscale=1.0-(tarray-np.min(tarray))/(np.max(tarray)-np.min(tarray)+1.)
-# f=12
-# #try greying with alphas instead
-# ax1.errorbar(colorH7[2],colorH7[1],xerr=colorH7[4],yerr=colorH7[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[0])#,mec=scalarMap.to_rgba(xerrors[0])[0],mfc=scalarMap.to_rgba(xerrors[0])[0],ecolor=scalarMap.to_rgba(xerrors[0])
-# ax1.text(colorH7[2]+0.01,colorH7[1]+0.05,'HAT-P-7b',color='k',fontsize=f,zorder=3,alpha=colorscale[0])#'xkcd:kelly green'mec=,mfc=scalarMap.to_rgba(xerrors[0]),ecolor=scalarMap.to_rgba(xerrors[0])
-# ax1.errorbar(colorH32[2],colorH32[1],xerr=colorH32[4],yerr=colorH32[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[1])#mec=scalarMap.to_rgba(xerrors[1])[0],mfc=scalarMap.to_rgba(xerrors[1])[0],ecolor=scalarMap.to_rgba(xerrors[1]),
-# ax1.text(colorH32[2]-0.1,colorH32[1]-0.12,'HAT-P-32b',color='k',fontsize=f,zorder=3,alpha=colorscale[1])#'xkcd:pink'
-# ax1.errorbar(colorH41[2],colorH41[1],xerr=colorH41[4],yerr=colorH41[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[2])#mec=scalarMap.to_rgba(xerrors[2])[0],mfc=scalarMap.to_rgba(xerrors[2])[0],ecolor=scalarMap.to_rgba(xerrors[2]),
-# ax1.text(colorH41[2]+0.02,colorH41[1]-0.1,'HAT-P-41b',color='k',fontsize=f,zorder=3,alpha=colorscale[2])#'xkcd:light orange'
-# ax1.errorbar(colorHD189[2],colorHD189[1],xerr=colorHD189[4],yerr=colorHD189[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[3])#mec=scalarMap.to_rgba(xerrors[3])[0],mfc=scalarMap.to_rgba(xerrors[3])[0],ecolor=scalarMap.to_rgba(xerrors[3]),
-# ax1.text(colorHD189[2]-0.13,colorHD189[1]+0.06,'HD 189733b',color='k',fontsize=f,zorder=3,alpha=colorscale[3])#'xkcd:greenish grey'
-# ax1.errorbar(colorHD209[2],colorHD209[1],xerr=colorHD209[4],yerr=colorHD209[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[4])#,mec=scalarMap.to_rgba(xerrors[4])[0],mfc=scalarMap.to_rgba(xerrors[4])[0],ecolor=scalarMap.to_rgba(xerrors[4])
-# ax1.text(colorHD209[2]+0.0,colorHD209[1]-0.08,'HD 209458b',color='k',fontsize=f,zorder=3,alpha=colorscale[4])#'xkcd:bright pink'
-# ax1.errorbar(colorK7[2],colorK7[1],xerr=colorK7[4],yerr=colorK7[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[5])#mec=scalarMap.to_rgba(xerrors[5])[0],mfc=scalarMap.to_rgba(xerrors[5])[0],ecolor=scalarMap.to_rgba(xerrors[5]),
-# ax1.text(colorK7[2]+0.03,colorK7[1]+0.02,'KELT-7b',color='k',fontsize=f,zorder=3,alpha=colorscale[5])#xkcd:orange,bbox=dict(facecolor='none',edgecolor='k')
-# ax1.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[6])#mec=scalarMap.to_rgba(xerrors[6])[0],mfc=scalarMap.to_rgba(xerrors[6])[0],ecolor=scalarMap.to_rgba(xerrors[6]),
-# ax1.text(colorKep13[2]+0.05,colorKep13[1]+0.01,'Kepler-13Ab',color='k',fontsize=f,zorder=3,alpha=colorscale[6])#'xkcd:lilac'
-# ax1.errorbar(colorW18[2],colorW18[1],xerr=colorW18[4],yerr=colorW18[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[7])#mec=scalarMap.to_rgba(xerrors[7])[0],mfc=scalarMap.to_rgba(xerrors[7])[0],ecolor=scalarMap.to_rgba(xerrors[7]),
-# ax1.text(colorW18[2]-0.11,colorW18[1]-0.05,'WASP-18b',color='k',fontsize=f,zorder=3,alpha=colorscale[7])#xkcd:blue
-# ax1.errorbar(colorW33[2],colorW33[1],xerr=colorW33[4],yerr=colorW33[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[8])#mec=scalarMap.to_rgba(xerrors[8])[0],mfc=scalarMap.to_rgba(xerrors[8])[0],ecolor=scalarMap.to_rgba(xerrors[8]),
-# ax1.text(colorW33[2]+0.02,colorW33[1]-0.03,'WASP-33b',color='k',fontsize=f,zorder=3,alpha=colorscale[8])#xkcd:sky blue
-# ax1.errorbar(colorW43[2],colorW43[1],xerr=colorW43[4],yerr=colorW43[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[9])#mec=scalarMap.to_rgba(xerrors[9])[0],mfc=scalarMap.to_rgba(xerrors[9])[0],ecolor=scalarMap.to_rgba(xerrors[9]),
-# ax1.text(colorW43[2]-0.1,colorW43[1]-0.11,'WASP-43b',color='k',fontsize=f,zorder=3,alpha=colorscale[9])#xkcd:red
-# ax1.errorbar(colorW74[2],colorW74[1],xerr=colorW74[4],yerr=colorW74[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[10])#mec=scalarMap.to_rgba(xerrors[10])[0],mfc=scalarMap.to_rgba(xerrors[10])[0],ecolor=scalarMap.to_rgba(xerrors[10]),
-# ax1.text(colorW74[2]+0.06,colorW74[1]-0.0,'WASP-74b',color='k',fontsize=f,zorder=3,alpha=colorscale[10])#xkcd:magenta,bbox=dict(facecolor='none',edgecolor='k')
-# ax1.errorbar(colorW76[2],colorW76[1],xerr=colorW76[4],yerr=colorW76[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[11])#mec=scalarMap.to_rgba(xerrors[11])[0],mfc=scalarMap.to_rgba(xerrors[11])[0],ecolor=scalarMap.to_rgba(xerrors[11]),
-# ax1.text(colorW76[2]+0.05,colorW76[1]-0.06,'WASP-76b',color='k',fontsize=f,zorder=3,alpha=colorscale[11])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# ax1.errorbar(colorW79[2],colorW79[1],xerr=colorW79[4],yerr=colorW79[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[12])#mec=scalarMap.to_rgba(xerrors[12])[0],mfc=scalarMap.to_rgba(xerrors[12])[0],ecolor=scalarMap.to_rgba(xerrors[12]),
-# ax1.text(colorW79[2]+0.03,colorW79[1]+0.08,'WASP-79b',color='k',fontsize=f,zorder=3,alpha=colorscale[12])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# ax1.errorbar(colorW103[2],colorW103[1],xerr=colorW103[4],yerr=colorW103[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[13])#mec=scalarMap.to_rgba(xerrors[13])[0],mfc=scalarMap.to_rgba(xerrors[13])[0],ecolor=scalarMap.to_rgba(xerrors[13]),
-# ax1.text(colorW103[2]-0.13,colorW103[1]+0.03,'WASP-103b',color='k',fontsize=f,zorder=3,alpha=colorscale[13])#xkcd:violet
-# ax1.errorbar(colorW121[2],colorW121[1],xerr=colorW121[4],yerr=colorW121[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[14])#mec=scalarMap.to_rgba(xerrors[14])[0],mfc=scalarMap.to_rgba(xerrors[14])[0],ecolor=scalarMap.to_rgba(xerrors[14]),
-# ax1.text(colorW121[2]-0.15,colorW121[1]-0.02,'WASP-121b',color='k',fontsize=f,zorder=3,alpha=colorscale[14])#xkcd:light green
-# ax1.errorbar(W77creal,colorW77[1],xerr=colorW77[4]/np.sqrt(3.),yerr=colorW77[3]/np.sqrt(3.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax1.text(0.36,11.6,'WASP-77Ab',color='r',fontsize=15,fontweight='bold')
-# ax1.errorbar(W77creal2,colorW77[1],xerr=colorW77[4]/np.sqrt(3.),yerr=colorW77[3]/np.sqrt(3.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# #ax1.plot([W77creal,W77creal2],[colorW77[1],colorW77[1]],color='r',linestyle=':',linewidth=2)
-# ax1.errorbar(W77creal3,colorW77[1],xerr=colorW77[4]/np.sqrt(3.),yerr=colorW77[3]/np.sqrt(3.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax1.plot([W77creal,W77creal3],[colorW77[1],colorW77[1]],color='r',linestyle=':',linewidth=2)
-# # ax1.errorbar(K23creal,colorK23[1],xerr=colorK23[4]/np.sqrt(2.),yerr=colorK23[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(K23creal-0.1,colorK23[1]-0.05,'K23A',color='r',fontsize=15)
-# # ax1.errorbar(K231creal,colorK231[1],xerr=colorK231[4]/np.sqrt(2.),yerr=colorK231[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(K231creal-0.1,colorK231[1]-0.05,'K2-31',color='r',fontsize=15)
-# # ax1.errorbar(K3creal,colorK3[1],xerr=colorK3[4],yerr=colorK3[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(K3creal-0.1,colorK3[1]-0.05,'K3',color='r',fontsize=15)
-# # ax1.errorbar(K4creal,colorK4[1],xerr=colorK4[4]/np.sqrt(2.),yerr=colorK4[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(K4creal-0.1,colorK4[1]-0.05,'K4A',color='r',fontsize=15)
-# ax1.errorbar(W14creal,colorW14[1],xerr=colorW14[4],yerr=colorW14[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax1.text(W14creal-0.1,colorW14[1]-0.05,'W14',color='r',fontsize=15)
-# # ax1.errorbar(H36creal,colorH36[1],xerr=colorH36[4],yerr=colorH36[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(H36creal-0.1,colorH36[1]-0.05,'H36',color='r',fontsize=15)
-# # ax1.errorbar(H32fcreal,colorH32f[1],xerr=colorH32f[4],yerr=colorH32f[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(H32fcreal-0.1,colorH32f[1]-0.05,'H32',color='r',fontsize=15)
-# # ax1.errorbar(W95creal,colorW95[1],xerr=colorW95[4],yerr=colorW95[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax1.text(W95creal-0.1,colorW95[1]-0.05,'W95',color='r',fontsize=15)
-# ax1.set_xlabel('log(Blackbody/In-Band Flux)',fontsize=20)
-# ax1.set_ylabel('log(Blackbody Flux) [erg/s/m$^{2}$]',fontsize=20)
-# ax1.tick_params(labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# ax1.set_ylim((10.3,12.8))
-# ax1.set_xlim((-0.2,0.65))
-# ax2=ax1.twinx()
-
-# ax2.set_ylim((10.3,12.8))
-# ax2.set_yticks(ticks=[10.989,11.727,12.174,12.477,12.697])
-# ax2.set_yticklabels(['1500','2000','2500','3000','3500'])
-# ax2.set_ylabel('Dayside Temperature [K]',fontsize=20)
-# ax2.tick_params(labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# plt.tight_layout()
-# plt.show()
-
-# #colormag plot with only temperatures plotted
-# fig,ax1=plt.subplots(figsize=(10,7))
-# ax1.set_ylim((10.5,12.7))
-# ax1.set_xlim((-0.2,0.65))
-# ax1.set_yticks(ticks=[10.989,11.727,12.174,12.477,12.697])
-# ax1.set_yticklabels(['1500','2000','2500','3000','3500'])
-# ax1.set_yticks(ticks=[10.537,10.779,11.174,11.336,11.481,11.611,11.834,11.930,12.018,12.100,12.244,12.308,12.368,12.424,12.526,12.572,12.616,12.658],minor=True)
-# ax1.set_yticklabels([],minor=True)
-# ax1.set_ylabel('Dayside Temperature [K]',fontsize=20)#Blackbody Temperature [K]
-# ax1.set_xlabel('Water Feature Strength',fontsize=20)#log(Blackbody/In-Band Flux)
-# ax1.tick_params(which='major',labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# ax1.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-
-# ax2=ax1.twinx()
-# ax2.axvline(x=0.0,color='k',zorder=1,linewidth=2)
-# ax2.plot(color_fiducial[:,2],color_fiducial[:,1],color='xkcd:cerulean',marker='.',label='Fiducial',markeredgecolor='xkcd:dark blue',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.32,10.7,'Fiducial',color='xkcd:dark blue',fontsize=15,zorder=3)
-# ax2.plot(color_tintTF18[:,2],color_tintTF18[:,1],color='xkcd:light brown',marker='.',markeredgecolor='xkcd:brown',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.1,11.1,'TF18 Internal Heat',color='xkcd:light brown',fontsize=15,zorder=3)
-# ax2.plot(color_lowCO[:,2],color_lowCO[:,1],color='xkcd:olive green',marker='.',markeredgecolor='xkcd:dark green',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.5,11.3,'[C/O]=0.01',color='xkcd:olive green',fontsize=15,zorder=3)
-
-
-# mycolor='#dbedff'#'xkcd:carolina blue'#'#e6e1de'#'xkcd:light grey'#'xkcd:pale lavender'
-# fillalpha=1.0
-# ax2.fill_betweenx(color_lowCO[:,1],fillhighCO,color_lowCO[:,2],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_highCO[:,1],color_highCO[:,2],filllowCO,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_metneg15[:,1],color_metneg15[:,2],fillhighmet,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_star8200[:,1],color_star8200[:,2],filldelaylow2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_star8200[-3:,1],color_star8200[-3:,2],fillstar[-3:],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_delayTiO2800[:,1],color_delayTiO2800[:,2],filldelayhigh2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_metneg15[:5,1],color_metneg15[:5,2],fillthebottom1[:5],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_grav20[:,1],color_grav20[:,2],fillthebottom2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_tint1percent[:,1],color_tint1percent[:,2],fillthebottom3,color=mycolor,zorder=0,alpha=fillalpha)
-
-# pointcolor='k'#'xkcd:cobalt blue'
-# ax2.errorbar(colorH7[2],colorH7[1],xerr=colorH7[4],yerr=colorH7[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[0])#,mec=scalarMap.to_rgba(xerrors[0])[0],mfc=scalarMap.to_rgba(xerrors[0])[0],ecolor=scalarMap.to_rgba(xerrors[0])
-# ax2.text(colorH7[2]+0.01,colorH7[1]+0.05,'HAT-P-7b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[0])#'xkcd:kelly green'mec=,mfc=scalarMap.to_rgba(xerrors[0]),ecolor=scalarMap.to_rgba(xerrors[0])
-# ax2.errorbar(colorH32[2],colorH32[1],xerr=colorH32[4],yerr=colorH32[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[1])#mec=scalarMap.to_rgba(xerrors[1])[0],mfc=scalarMap.to_rgba(xerrors[1])[0],ecolor=scalarMap.to_rgba(xerrors[1]),
-# ax2.text(colorH32[2]-0.1,colorH32[1]-0.12,'HAT-P-32b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[1])#'xkcd:pink'
-# ax2.errorbar(colorH41[2],colorH41[1],xerr=colorH41[4],yerr=colorH41[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[2])#mec=scalarMap.to_rgba(xerrors[2])[0],mfc=scalarMap.to_rgba(xerrors[2])[0],ecolor=scalarMap.to_rgba(xerrors[2]),
-# ax2.text(colorH41[2]+0.02,colorH41[1]-0.1,'HAT-P-41b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[2])#'xkcd:light orange'
-# ax2.errorbar(colorHD189[2],colorHD189[1],xerr=colorHD189[4],yerr=colorHD189[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[3])#mec=scalarMap.to_rgba(xerrors[3])[0],mfc=scalarMap.to_rgba(xerrors[3])[0],ecolor=scalarMap.to_rgba(xerrors[3]),
-# ax2.text(colorHD189[2]-0.13,colorHD189[1]+0.06,'HD 189733b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[3])#'xkcd:greenish grey'
-# ax2.errorbar(colorHD209[2],colorHD209[1],xerr=colorHD209[4],yerr=colorHD209[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[4])#,mec=scalarMap.to_rgba(xerrors[4])[0],mfc=scalarMap.to_rgba(xerrors[4])[0],ecolor=scalarMap.to_rgba(xerrors[4])
-# ax2.text(colorHD209[2]+0.0,colorHD209[1]-0.08,'HD 209458b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[4])#'xkcd:bright pink'
-# ax2.errorbar(colorK7[2],colorK7[1],xerr=colorK7[4],yerr=colorK7[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[5])#mec=scalarMap.to_rgba(xerrors[5])[0],mfc=scalarMap.to_rgba(xerrors[5])[0],ecolor=scalarMap.to_rgba(xerrors[5]),
-# ax2.text(colorK7[2]+0.03,colorK7[1]+0.02,'KELT-7b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[5])#xkcd:orange,bbox=dict(facecolor='none',edgecolor='k')
-# # ax2.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[6])#mec=scalarMap.to_rgba(xerrors[6])[0],mfc=scalarMap.to_rgba(xerrors[6])[0],ecolor=scalarMap.to_rgba(xerrors[6]),
-# # ax2.text(colorKep13[2]+0.05,colorKep13[1]+0.01,'Kepler-13Ab',color='k',fontsize=f,zorder=3,alpha=colorscale[6])#'xkcd:lilac'
-# ax2.errorbar(colorW18[2],colorW18[1],xerr=colorW18[4],yerr=colorW18[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[7])#mec=scalarMap.to_rgba(xerrors[7])[0],mfc=scalarMap.to_rgba(xerrors[7])[0],ecolor=scalarMap.to_rgba(xerrors[7]),
-# ax2.text(colorW18[2]-0.11,colorW18[1]-0.05,'WASP-18b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[7])#xkcd:blue
-# ax2.errorbar(colorW33[2],colorW33[1],xerr=colorW33[4],yerr=colorW33[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[8])#mec=scalarMap.to_rgba(xerrors[8])[0],mfc=scalarMap.to_rgba(xerrors[8])[0],ecolor=scalarMap.to_rgba(xerrors[8]),
-# ax2.text(colorW33[2]+0.02,colorW33[1]-0.03,'WASP-33b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[8])#xkcd:sky blue
-# ax2.errorbar(colorW43[2],colorW43[1],xerr=colorW43[4],yerr=colorW43[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[9])#mec=scalarMap.to_rgba(xerrors[9])[0],mfc=scalarMap.to_rgba(xerrors[9])[0],ecolor=scalarMap.to_rgba(xerrors[9]),
-# ax2.text(colorW43[2]-0.1,colorW43[1]-0.11,'WASP-43b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[9])#xkcd:red
-# ax2.errorbar(colorW74[2],colorW74[1],xerr=colorW74[4],yerr=colorW74[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[10])#mec=scalarMap.to_rgba(xerrors[10])[0],mfc=scalarMap.to_rgba(xerrors[10])[0],ecolor=scalarMap.to_rgba(xerrors[10]),
-# ax2.text(colorW74[2]+0.06,colorW74[1]-0.0,'WASP-74b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[10])#xkcd:magenta,bbox=dict(facecolor='none',edgecolor='k')
-# ax2.errorbar(colorW76[2],colorW76[1],xerr=colorW76[4],yerr=colorW76[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[11])#mec=scalarMap.to_rgba(xerrors[11])[0],mfc=scalarMap.to_rgba(xerrors[11])[0],ecolor=scalarMap.to_rgba(xerrors[11]),
-# ax2.text(colorW76[2]+0.05,colorW76[1]-0.06,'WASP-76b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[11])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# ax2.errorbar(colorW79[2],colorW79[1],xerr=colorW79[4],yerr=colorW79[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[12])#mec=scalarMap.to_rgba(xerrors[12])[0],mfc=scalarMap.to_rgba(xerrors[12])[0],ecolor=scalarMap.to_rgba(xerrors[12]),
-# ax2.text(colorW79[2]+0.03,colorW79[1]+0.08,'WASP-79b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[12])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# ax2.errorbar(colorW103[2],colorW103[1],xerr=colorW103[4],yerr=colorW103[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[13])#mec=scalarMap.to_rgba(xerrors[13])[0],mfc=scalarMap.to_rgba(xerrors[13])[0],ecolor=scalarMap.to_rgba(xerrors[13]),
-# ax2.text(colorW103[2]-0.13,colorW103[1]+0.03,'WASP-103b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[13])#xkcd:violet
-# ax2.errorbar(colorW121[2],colorW121[1],xerr=colorW121[4],yerr=colorW121[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[14])#mec=scalarMap.to_rgba(xerrors[14])[0],mfc=scalarMap.to_rgba(xerrors[14])[0],ecolor=scalarMap.to_rgba(xerrors[14]),
-# ax2.text(colorW121[2]-0.15,colorW121[1]-0.02,'WASP-121b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[14])#xkcd:light green
-# ax2.errorbar(W77creal,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.text(0.3,11.65,'WASP-77Ab',color='r',fontsize=15,fontweight='bold')
-# ax2.errorbar(W77creal2,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(W77creal3,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.plot([W77creal,W77creal3],[colorW77[1],colorW77[1]],color='r',linestyle=':',linewidth=2)
-
-# ax2.set_ylim((10.5,12.7))
-# ax2.set_yticks(ticks=[10.989,11.727,12.174,12.477,12.697])
-# ax2.set_yticklabels([])
-# ax2.set_yticks(ticks=[10.537,10.779,11.174,11.336,11.481,11.611,11.834,11.930,12.018,12.100,12.244,12.308,12.368,12.424,12.526,12.572,12.616,12.658],minor=True)
-# ax2.set_yticklabels([],minor=True)
-# ax2.tick_params(which='major',labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# ax2.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.tight_layout()
-# plt.show()
-
-# fig,ax1=plt.subplots(figsize=(10,7))
-# ax1.set_ylim((10.5,12.7))
-# ax1.set_xlim((-0.2,0.65))
-# ax1.set_yticks(ticks=[10.989,11.727,12.174,12.477,12.697])
-# ax1.set_yticklabels(['1500','2000','2500','3000','3500'])
-# ax1.set_yticks(ticks=[10.537,10.779,11.174,11.336,11.481,11.611,11.834,11.930,12.018,12.100,12.244,12.308,12.368,12.424,12.526,12.572,12.616,12.658],minor=True)
-# ax1.set_yticklabels([],minor=True)
-# ax1.set_ylabel('Dayside Temperature [K]',fontsize=20)#Blackbody Temperature [K]
-# ax1.set_xlabel('Water Feature Strength',fontsize=20)#log(Blackbody/In-Band Flux)
-# ax1.tick_params(which='major',labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# ax1.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-
-# ax2=ax1.twinx()
-# ax2.axvline(x=0.0,color='k',zorder=1,linewidth=2)
-# ax2.plot(color_fiducial[:,2],color_fiducial[:,1],color='xkcd:cerulean',marker='.',label='Fiducial',markeredgecolor='xkcd:dark blue',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.32,10.7,'Fiducial',color='xkcd:dark blue',fontsize=15,zorder=3)
-# ax2.plot(color_tintTF18[:,2],color_tintTF18[:,1],color='xkcd:light brown',marker='.',markeredgecolor='xkcd:brown',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.1,11.15,'TF18 Internal Heat',color='xkcd:light brown',fontsize=15,zorder=3)
-# ax2.plot(color_lowCO[:,2],color_lowCO[:,1],color='xkcd:olive green',marker='.',markeredgecolor='xkcd:dark green',zorder=3,linewidth=2,markersize=10)
-# ax2.text(0.5,11.3,'[C/O]=0.01',color='xkcd:olive green',fontsize=15,zorder=3)
-
-# mycolor='#dbedff'#'xkcd:carolina blue'#'#e6e1de'#'xkcd:light grey'#'xkcd:pale lavender'
-# fillalpha=1.0
-# ax2.fill_betweenx(color_lowCO[:,1],fillhighCO,color_lowCO[:,2],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_highCO[:,1],color_highCO[:,2],filllowCO,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_metneg15[:,1],color_metneg15[:,2],fillhighmet,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_star8200[:,1],color_star8200[:,2],filldelaylow2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_star8200[-3:,1],color_star8200[-3:,2],fillstar[-3:],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_delayTiO2800[:,1],color_delayTiO2800[:,2],filldelayhigh2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_metneg15[:5,1],color_metneg15[:5,2],fillthebottom1[:5],color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_grav20[:,1],color_grav20[:,2],fillthebottom2,color=mycolor,zorder=0,alpha=fillalpha)
-# ax2.fill_betweenx(color_tint1percent[:,1],color_tint1percent[:,2],fillthebottom3,color=mycolor,zorder=0,alpha=fillalpha)
-
-# pointcolor='k'#'xkcd:cobalt blue'
-# ax2.errorbar(colorH7[2],colorH7[1],xerr=colorH7[4],yerr=colorH7[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#,mec=scalarMap.to_rgba(xerrors[0])[0],mfc=scalarMap.to_rgba(xerrors[0])[0],ecolor=scalarMap.to_rgba(xerrors[0])
-# ax2.text(colorH7[2]+0.01,colorH7[1]+0.05,'HAT-P-7b',color=pointcolor,fontsize=f,zorder=3)#'xkcd:kelly green'mec=,mfc=scalarMap.to_rgba(xerrors[0]),ecolor=scalarMap.to_rgba(xerrors[0])
-# ax2.errorbar(colorH32[2],colorH32[1],xerr=colorH32[4],yerr=colorH32[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[1])[0],mfc=scalarMap.to_rgba(xerrors[1])[0],ecolor=scalarMap.to_rgba(xerrors[1]),
-# ax2.text(colorH32[2]-0.1,colorH32[1]-0.12,'HAT-P-32b',color=pointcolor,fontsize=f,zorder=3)#'xkcd:pink'
-# #ax2.errorbar(colorH41[2],colorH41[1],xerr=colorH41[4],yerr=colorH41[3],marker='.',markersize=15,linestyle='none',linewidth=3,label='Observed Planets',zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[2])#mec=scalarMap.to_rgba(xerrors[2])[0],mfc=scalarMap.to_rgba(xerrors[2])[0],ecolor=scalarMap.to_rgba(xerrors[2]),
-# #ax2.text(colorH41[2]+0.02,colorH41[1]-0.1,'HAT-P-41b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[2])#'xkcd:light orange'
-# ax2.errorbar(colorHD189[2],colorHD189[1],xerr=colorHD189[4],yerr=colorHD189[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[3])[0],mfc=scalarMap.to_rgba(xerrors[3])[0],ecolor=scalarMap.to_rgba(xerrors[3]),
-# ax2.text(colorHD189[2]-0.13,colorHD189[1]+0.06,'HD 189733b',color=pointcolor,fontsize=f,zorder=3)#'xkcd:greenish grey'
-# ax2.errorbar(colorHD209[2],colorHD209[1],xerr=colorHD209[4],yerr=colorHD209[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#,mec=scalarMap.to_rgba(xerrors[4])[0],mfc=scalarMap.to_rgba(xerrors[4])[0],ecolor=scalarMap.to_rgba(xerrors[4])
-# ax2.text(colorHD209[2]+0.0,colorHD209[1]-0.08,'HD 209458b',color=pointcolor,fontsize=f,zorder=3)#'xkcd:bright pink'
-# #ax2.errorbar(colorK7[2],colorK7[1],xerr=colorK7[4],yerr=colorK7[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[5])#mec=scalarMap.to_rgba(xerrors[5])[0],mfc=scalarMap.to_rgba(xerrors[5])[0],ecolor=scalarMap.to_rgba(xerrors[5]),
-# #ax2.text(colorK7[2]+0.03,colorK7[1]+0.02,'KELT-7b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[5])#xkcd:orange,bbox=dict(facecolor='none',edgecolor='k')
-# # ax2.errorbar(colorKep13[2],colorKep13[1],xerr=colorKep13[4],yerr=colorKep13[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc='k',ecolor='k',alpha=colorscale[6])#mec=scalarMap.to_rgba(xerrors[6])[0],mfc=scalarMap.to_rgba(xerrors[6])[0],ecolor=scalarMap.to_rgba(xerrors[6]),
-# # ax2.text(colorKep13[2]+0.05,colorKep13[1]+0.01,'Kepler-13Ab',color='k',fontsize=f,zorder=3,alpha=colorscale[6])#'xkcd:lilac'
-# ax2.errorbar(colorW18[2],colorW18[1],xerr=colorW18[4],yerr=colorW18[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[7])[0],mfc=scalarMap.to_rgba(xerrors[7])[0],ecolor=scalarMap.to_rgba(xerrors[7]),
-# ax2.text(colorW18[2]-0.11,colorW18[1]-0.05,'WASP-18b',color=pointcolor,fontsize=f,zorder=3)#xkcd:blue
-# ax2.errorbar(colorW33[2],colorW33[1],xerr=colorW33[4],yerr=colorW33[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[8])[0],mfc=scalarMap.to_rgba(xerrors[8])[0],ecolor=scalarMap.to_rgba(xerrors[8]),
-# ax2.text(colorW33[2]+0.02,colorW33[1]-0.03,'WASP-33b',color=pointcolor,fontsize=f,zorder=3)#xkcd:sky blue
-# ax2.errorbar(colorW43[2],colorW43[1],xerr=colorW43[4],yerr=colorW43[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[9])[0],mfc=scalarMap.to_rgba(xerrors[9])[0],ecolor=scalarMap.to_rgba(xerrors[9]),
-# ax2.text(colorW43[2]-0.1,colorW43[1]-0.11,'WASP-43b',color=pointcolor,fontsize=f,zorder=3)#xkcd:red
-# #ax2.errorbar(colorW74[2],colorW74[1],xerr=colorW74[4],yerr=colorW74[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[10])#mec=scalarMap.to_rgba(xerrors[10])[0],mfc=scalarMap.to_rgba(xerrors[10])[0],ecolor=scalarMap.to_rgba(xerrors[10]),
-# #ax2.text(colorW74[2]+0.06,colorW74[1]-0.0,'WASP-74b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[10])#xkcd:magenta,bbox=dict(facecolor='none',edgecolor='k')
-# #ax2.errorbar(colorW76[2],colorW76[1],xerr=colorW76[4],yerr=colorW76[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[11])#mec=scalarMap.to_rgba(xerrors[11])[0],mfc=scalarMap.to_rgba(xerrors[11])[0],ecolor=scalarMap.to_rgba(xerrors[11]),
-# #ax2.text(colorW76[2]+0.05,colorW76[1]-0.06,'WASP-76b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[11])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# #ax2.errorbar(colorW79[2],colorW79[1],xerr=colorW79[4],yerr=colorW79[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor,alpha=colorscale[12])#mec=scalarMap.to_rgba(xerrors[12])[0],mfc=scalarMap.to_rgba(xerrors[12])[0],ecolor=scalarMap.to_rgba(xerrors[12]),
-# #ax2.text(colorW79[2]+0.03,colorW79[1]+0.08,'WASP-79b',color=pointcolor,fontsize=f,zorder=3,alpha=colorscale[12])#xkcd:aquamarine,bbox=dict(facecolor='none',edgecolor='k')
-# ax2.errorbar(colorW103[2],colorW103[1],xerr=colorW103[4],yerr=colorW103[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[13])[0],mfc=scalarMap.to_rgba(xerrors[13])[0],ecolor=scalarMap.to_rgba(xerrors[13]),
-# ax2.text(colorW103[2]-0.13,colorW103[1]+0.03,'WASP-103b',color=pointcolor,fontsize=f,zorder=3)#xkcd:violet
-# ax2.errorbar(colorW121[2],colorW121[1],xerr=colorW121[4],yerr=colorW121[3],marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4,mec='k',mfc=pointcolor,ecolor=pointcolor)#mec=scalarMap.to_rgba(xerrors[14])[0],mfc=scalarMap.to_rgba(xerrors[14])[0],ecolor=scalarMap.to_rgba(xerrors[14]),
-# ax2.text(colorW121[2]-0.15,colorW121[1]-0.02,'WASP-121b',color=pointcolor,fontsize=f,zorder=3)#xkcd:light green
-# ax2.errorbar(MA1creal2,colorMA1[1],xerr=colorMA1[4],yerr=colorMA1[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(K16creal2,colorK16[1],xerr=colorK16[4]/np.sqrt(2.),yerr=colorK16[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(K20creal2,colorK20[1],xerr=colorK20[4],yerr=colorK20[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(W3creal2,colorW3[1],xerr=colorW3[4]/np.sqrt(2.),yerr=colorW3[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# #ax2.errorbar(W173creal2,colorW173[1],xerr=colorW173[4]/np.sqrt(2.),yerr=colorW173[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# #ax2.errorbar(W14creal2,colorW14[1],xerr=colorW14[4]/np.sqrt(2.),yerr=colorW14[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(K11creal2,colorK11[1],xerr=colorK11[4],yerr=colorK11[3],color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(K8creal2,colorK8[1],xerr=colorK8[4]/np.sqrt(2.),yerr=colorK8[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(W77creal2,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(C2creal2,colorC2[1],xerr=colorC2[4]/np.sqrt(2.),yerr=colorC2[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(W140creal2,colorW140[1],xerr=colorW140[4]/np.sqrt(2.),yerr=colorW140[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# ax2.errorbar(XO3creal2,colorXO3[1],xerr=colorXO3[4]/np.sqrt(2.),yerr=colorXO3[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# #ax2.text(0.36,11.6,'WASP-77Ab',color='r',fontsize=15,fontweight='bold')
-# # ax2.errorbar(W77creal2,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax2.errorbar(W77creal3,colorW77[1],xerr=colorW77[4]/np.sqrt(2.),yerr=colorW77[3]/np.sqrt(2.),color='r',mec='k',ecolor='r',marker='*',markersize=20,linestyle='none',linewidth=3,zorder=5)
-# # ax2.plot([W77creal,W77creal3],[colorW77[1],colorW77[1]],color='r',linestyle=':',linewidth=2)
-
-# ax2.set_ylim((10.5,12.7))
-# ax2.set_yticks(ticks=[10.989,11.727,12.174,12.477,12.697])
-# ax2.set_yticklabels([])
-# ax2.set_yticks(ticks=[10.537,10.779,11.174,11.336,11.481,11.611,11.834,11.930,12.018,12.100,12.244,12.308,12.368,12.424,12.526,12.572,12.616,12.658],minor=True)
-# ax2.set_yticklabels([],minor=True)
-# ax2.tick_params(which='major',labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# ax2.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-# plt.tight_layout()
-# plt.show()
-
-#plot temps versus each other
-# bbodtemps=np.array([2762.,1935.,2415.,1442.,1705.,2445.,3468.\
-# 	,2968.,3116.,1769.,2201.,2768.,2075.,3007.,2662.])
-
-
-############### FIT TIRR VS TDAY ###########################################
-# def fittemps(p,tirr,tday):
-# 	y=p[0]*tirr+p[1]
-# 	return np.array(tday-y)
-
-# #H7,H32,H41,HD189,HD209,K7,Kep13,W18,W33,W43,W74,W76,W79,W103,W121
-# tday=np.array([colorH7[0],colorH32[0],colorH41[0],colorHD189[0],colorHD209[0],colorK7[0],colorW18[0],\
-# 	colorW33[0],colorW43[0],colorW74[0],colorW76[0],colorW79[0],colorW103[0],colorW121[0]])
-# tdayerr=np.array([38.,58.,65.,9.,26.,54.,12.,15.,13.,45.,22.,57.,20.,14.])
-# tirr=np.array([3169.,2685.,2737.,1719.,2052.,2895.,3370.,3932.,2048.,2717.,3095.,2489.,3541.,3334.])
-
-# params0=[0.8,-90.]
-# tfit=leastsq(fittemps,params0,args=(tirr,tday))
-
-# def lnprob(theta,y,yerr,tirr):
-# 	lp=lnprior(theta)
-# 	return lp+lnlike(theta,y,yerr,tirr)
-
-# def lnlike(theta,y,yerr,tirr):
-# 	model = theta[0]*tirr+theta[1]
-# 	resid=y-model
-# 	chi2=np.sum((resid/yerr)**2)
-# 	dof=np.shape(y)[0]-1.
-# 	chi2red=chi2/dof
-# 	ln_likelihood=-0.5*(np.sum((resid/yerr)**2 + np.log(2.0*np.pi*(yerr)**2)))
-# 	return ln_likelihood
-
-# def lnprior(theta):
-# 	lnpriorprob=0.
-# 	return lnpriorprob
-
-# ndim=2
-# nwalkers=100
-# theta=tfit[0]
-
-# sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args = (tday,tdayerr,tirr), pool=mp.Pool())
-# pos = [theta + 1e-5*np.random.randn(ndim) for i in range(nwalkers)]
-
-# bestfit=np.zeros(ndim+1)
-# bestfit[0]=10.**8
-# for i, result in enumerate(sampler.sample(pos, iterations=1000)):
-# 	print("step", i)
-# 	if i>200:
-# 		for guy in np.arange(nwalkers):
-# 			resid=fittemps(result.coords[guy],tirr,tday)
-# 			chi2val=np.sum((resid//tdayerr)**2.)
-# 			if chi2val<bestfit[0]:
-# 				bestfit[0]=chi2val
-# 				bestfit[1:]=result.coords[guy]
-
-# samples = sampler.chain[:, 200:, :].reshape((-1, ndim))
-# def quantile(x, q):
-# 	return np.percentile(x, [100. * qi for qi in q])
-# bestfit=0.807*np.linspace(1500,4000,100)+71
-
-# plt.figure()
-# plt.errorbar(tirr,tday,tdayerr,color='k',marker='.',linestyle='none')
-# plt.plot(np.linspace(1500,4000,100),bestfit,color='r')
-# plt.show()
 
 # #ttemp=1900.
 def getflux(ttemp):
@@ -2676,66 +1773,67 @@ def getflux(ttemp):
 
 ##########################Interpolate Mike's fiducial models to make the explanation plot
 
-# datwave=W43[:,0]
-# datflux=W43[:,1]*10**-6.
-# daterr=W43[:,2]*10**-6.
-# diff=np.diff(W43[:,0])[0]
+datwave=W43[:,0]
+datflux=W43[:,1]*10**-6.
+daterr=W43[:,2]*10**-6.
+diff=np.diff(W43[:,0])[0]
 # plwave=waveW43
 # plflux=fluxW43
 # plrprs=rprsW43
 
-# tempwavegrid=masterwavegrid*10**-6.
+tempwavegrid=masterwavegrid*10**-6.
 
-# def indplanetbbod(pltemp,plwave,startemp,starmet,starlogg,rprs):
-# 	plfinebbod=fakedata_bbod(tempwavegrid,pltemp) #erg/s/m^2/m
-# 	sp = S.Icat('k93models',startemp,starmet,starlogg)	#Parameters go temp, metallicity, logg
-# 	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-# 	wave=sp.wave*10.**-10  #in meters
-# 	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-# 	starfinebbod=np.interp(tempwavegrid,wave,flux)
-# 	# starfinebbod=fakedata_bbod(masterwavegrid,startemp)
-# 	diff=np.mean(np.diff(plwave))*10**-6.
+def indplanetbbod(pltemp,plwave,startemp,starmet,starlogg,rprs):
+	plfinebbod=fakedata_bbod(tempwavegrid,pltemp) #erg/s/m^2/m
+	sp = S.Icat('k93models',startemp,starmet,starlogg)	#Parameters go temp, metallicity, logg
+	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave=sp.wave*10.**-10  #in meters
+	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
+	starfinebbod=np.interp(tempwavegrid,wave,flux)
+	# starfinebbod=fakedata_bbod(masterwavegrid,startemp)
+	diff=np.mean(np.diff(plwave))*10**-6.
 
-# 	newminwave=np.min(plwave)*10**-6.
-# 	newmaxwave=np.max(plwave)*10**-6.
-# 	smallgrid=tempwavegrid[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
-# 	smallplflux=plfinebbod[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
-# 	smallstarflux=starfinebbod[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
-# 	tgrid=tempwavegrid[(tempwavegrid>newminwave)&(tempwavegrid<newmaxwave)]
-# 	modelbbod=np.zeros(np.shape(tgrid)[0])
-# 	for i in np.arange(np.shape(tgrid)[0]):
-# 		wave1=tgrid[i]-diff/2.
-# 		wave2=tgrid[i]+diff/2.
-# 		plint=trapezoidint(smallgrid[(smallgrid>wave1)&(smallgrid<wave2)],smallplflux[(smallgrid>wave1)&(smallgrid<wave2)])
-# 		starint=trapezoidint(smallgrid[(smallgrid>wave1)&(smallgrid<wave2)],smallstarflux[(smallgrid>wave1)&(smallgrid<wave2)])
-# 		modelbbod[i]=(plint/starint*rprs**2.)*10**6. #in ppm
-# 	return tgrid*10**6.,modelbbod
+	newminwave=np.min(plwave)*10**-6.
+	newmaxwave=np.max(plwave)*10**-6.
+	smallgrid=tempwavegrid[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
+	smallplflux=plfinebbod[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
+	smallstarflux=starfinebbod[(tempwavegrid>newminwave-diff/2.)&(tempwavegrid<newmaxwave+diff/2.)]
+	tgrid=tempwavegrid[(tempwavegrid>newminwave)&(tempwavegrid<newmaxwave)]
+	modelbbod=np.zeros(np.shape(tgrid)[0])
+	for i in np.arange(np.shape(tgrid)[0]):
+		wave1=tgrid[i]-diff/2.
+		wave2=tgrid[i]+diff/2.
+		plint=trapezoidint(smallgrid[(smallgrid>wave1)&(smallgrid<wave2)],smallplflux[(smallgrid>wave1)&(smallgrid<wave2)])
+		starint=trapezoidint(smallgrid[(smallgrid>wave1)&(smallgrid<wave2)],smallstarflux[(smallgrid>wave1)&(smallgrid<wave2)])
+		modelbbod[i]=(plint/starint*rprs**2.)*10**6. #in ppm
+	return tgrid*10**6.,modelbbod
 
-# tgridW43,BmodelW43=indplanetbbod(1775.,datwave,4520.,-0.01,4.645,0.1558)
-# plotBbod=np.interp(datwave,tgridW43,BmodelW43)
+tgridW43,BmodelW43=indplanetbbod(1775.,datwave,4520.,-0.01,4.645,0.1558)
+plotBbod=np.interp(datwave,tgridW43,BmodelW43)
 
-# W43mod=np.loadtxt('modelW43.txt')
-# interpmodel=np.interp(datwave,W43mod[:,0],W43mod[:,1]*10**6.)
-# plt.figure(figsize=(8.5,6))
-# # plt.errorbar(datwave,datinpunits,yerr=errinpunits,color='b',marker='.',markersize=15,linestyle='none',linewidth=3)
-# # plt.plot(datwave,binneddownmod[:,63],marker='.',markersize=15,linewidth=3,markeredgecolor='xkcd:brown',color='xkcd:light brown')
-# # plt.plot(datwave,planetbbod,marker='.',markersize=15,linewidth=3,markeredgecolor='k',color='xkcd:slate gray')
-# # plt.errorbar(datwave,datflux*10**6.,yerr=daterr*10**6.,color='b',marker='.',markersize=15,linestyle='none',linewidth=3,label='WASP-43b, Kreidberg et al. (2014)',zorder=2)
-# plt.plot(datwave,interpmodel,marker='.',markersize=15,linewidth=3,markeredgecolor='k',color='xkcd:slate gray',label='Fiducial Model',zorder=1)
-# plt.plot(datwave,plotBbod,marker='d',markersize=9,linewidth=3,markeredgecolor='k',color='xkcd:slate gray',label='Blackbody',zorder=1)#slate gray
-# plt.fill_between([1.22,1.33],[200,200],[800,800],color='xkcd:orange',alpha=0.3,zorder=0,edgecolor='none')
-# plt.fill_between([1.53,1.61],[200,200],[800,800],color='xkcd:orange',alpha=0.3,zorder=0,edgecolor='none')
-# plt.fill_between([1.35,1.48],[200,200],[800,800],color='g',alpha=0.3,zorder=0,edgecolor='none')
-# plt.text(1.415,250,'In-Band',fontsize=20,color='g',horizontalalignment='center')
-# plt.text(1.275,250,'Out-of-\nBand',fontsize=20,color='xkcd:orange',horizontalalignment='center')
-# plt.tick_params(labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
-# plt.xlabel('Wavelength [$\mu$m]',fontsize=20)
-# plt.ylabel('F$_{p}$/F$_{s}$ [ppm]',fontsize=20)
-# plt.legend(fontsize=15,loc='upper center')
-# plt.xlim((1.1,1.7))
-# plt.ylim((225,800))
-# plt.tight_layout()
-# plt.show()
+W43mod=np.loadtxt('./FiducialModels/modelfidW43.txt')
+interpmodel=np.interp(datwave,W43mod[:,0],W43mod[:,1]*10**6.)
+plt.figure(figsize=(8.5,6))
+# plt.errorbar(datwave,datinpunits,yerr=errinpunits,color='b',marker='.',markersize=15,linestyle='none',linewidth=3)
+# plt.plot(datwave,binneddownmod[:,63],marker='.',markersize=15,linewidth=3,markeredgecolor='xkcd:brown',color='xkcd:light brown')
+# plt.plot(datwave,planetbbod,marker='.',markersize=15,linewidth=3,markeredgecolor='k',color='xkcd:slate gray')
+plt.errorbar(datwave,datflux*10**6.,yerr=daterr*10**6.,color='b',marker='.',markersize=15,linestyle='none',linewidth=3,label='WASP-43b, Kreidberg et al. (2014)',zorder=2)
+plt.plot(datwave,interpmodel,marker='.',markersize=15,linewidth=3,markeredgecolor='k',color='xkcd:slate gray',label='Fiducial Model',zorder=1)
+plt.plot(datwave,plotBbod,marker='d',markersize=9,linewidth=3,markeredgecolor='k',color='xkcd:slate gray',label='Blackbody',zorder=1)#slate gray
+plt.fill_between([1.22,1.33],[200,200],[800,800],color='xkcd:orange',alpha=0.3,zorder=0,edgecolor='none')
+plt.fill_between([1.53,1.61],[200,200],[800,800],color='xkcd:orange',alpha=0.3,zorder=0,edgecolor='none')
+plt.fill_between([1.35,1.48],[200,200],[800,800],color='g',alpha=0.3,zorder=0,edgecolor='none')
+plt.text(1.415,250,'In-Band',fontsize=20,color='g',horizontalalignment='center')
+plt.text(1.275,250,'Out-of-\nBand',fontsize=20,color='xkcd:orange',horizontalalignment='center')
+plt.tick_params(labelsize=20,axis="both",top=True,width=2,length=8,direction='in')
+plt.xlabel('Wavelength [$\mu$m]',fontsize=20)
+plt.ylabel('F$_{p}$/F$_{s}$ [ppm]',fontsize=20)
+plt.legend(fontsize=15,loc='upper center')
+plt.xlim((1.1,1.7))
+plt.ylim((225,800))
+plt.tight_layout()
+plt.savefig('explanation.png',dpi=300)
+plt.show()
 
 #################### CALCULATE CHI-SQUARED FOR DATA FITTING EACH MODEL IN COLOR-MAG SPACE #########################
 
@@ -2749,12 +1847,6 @@ xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],co
 ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1],colorW103[1],colorW33[1],colorKep13[1]])
 xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4],colorW103[4],colorW33[4],colorKep13[4]])
 yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3],colorW103[3],colorW33[3],colorKep13[3]])
-
-#with W77
-# xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],colorH32[2],colorW77[2],colorW4[2],colorW79[2],colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2],colorW103[2],colorW33[2],colorKep13[2]])
-# ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW77[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1],colorW103[1],colorW33[1],colorKep13[1]])
-# xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW77[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4],colorW103[4],colorW33[4],colorKep13[4]])
-# yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW77[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3],colorW103[3],colorW33[3],colorKep13[3]])
 
 numpoints=19.
 # xlist=np.array([colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2],colorW103[2],colorW33[2],colorKep13[2]])
@@ -2881,13 +1973,6 @@ signif_tintTF18=stats.chi2.sf(chi2_tintTF18,numpoints)
 sigma_tintTF18=special.erfinv(1-signif_tintTF18)*np.sqrt(2.)
 
 #Giving each planet an appropriate gravity compared to the fiducial model:
-#With W77
-# xvals_changegrav=np.array([xvals_fiducial[0],xvals_fiducial[1],xvals_grav40[2],xvals_fiducial[3],\
-# 	xvals_fiducial[4],xvals_grav20[5],xvals_fiducial[6],xvals_fiducial[7],xvals_fiducial[8],xvals_fiducial[9],\
-# 	xvals_fiducial[10],xvals_fiducial[11],xvals_grav40[12],xvals_fiducial[13],xvals_fiducial[14],\
-# 	xvals_fiducial[15],xvals_grav40[16],xvals_fiducial[17],xvals_fiducial[18],xvals_grav40[19]])
-
-#without
 xvals_changegrav=np.array([xvals_fiducial[0],xvals_fiducial[1],xvals_grav40[2],xvals_fiducial[3],\
 	xvals_fiducial[4],xvals_grav20[5],xvals_fiducial[6],xvals_fiducial[7],xvals_fiducial[8],\
 	xvals_fiducial[9],xvals_fiducial[10],xvals_grav40[11],xvals_fiducial[12],xvals_fiducial[13],\
@@ -2906,10 +1991,10 @@ chi2red_changegrav=chi2_changegrav/numpoints
 signif_changegrav=stats.chi2.sf(chi2_changegrav,numpoints)
 sigma_changegrav=special.erfinv(1-signif_changegrav)*np.sqrt(2.)
 
-xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],colorH32[2],colorW77[2],colorW4[2],colorW79[2],colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2]])
-ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW77[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1]])
-xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW77[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4]])
-yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW77[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3]])
+xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],colorH32[2],colorW4[2],colorW79[2],colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2]])
+ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1]])
+xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4]])
+yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3]])
 
 numpoints=16.
 
@@ -2944,7 +2029,49 @@ signif_bdmetpos1=stats.chi2.sf(chi2_bdmetpos1,numpoints)
 sigma_bdmetpos1=special.erfinv(1-signif_bdmetpos1)*np.sqrt(2.)
 
 
+##################### FIGURE 2 ###################################
+n=np.shape(templist)[0]
+colors=pl.cm.plasma(np.linspace(0,0.9,n))
 
+rc('axes',linewidth=2)
+fig,(ax1,ax2,ax3)=plt.subplots(3,1,figsize=(12,21))
+for i in np.arange(np.shape(templist)[0]/2.)*2.:
+	ax2.plot(mikewaves,mikemods[:,int(i)],color=colors[int(i)],linewidth=3,zorder=1)
+ax2.set_xlim((1.0,1.8))
+ax2.axvspan(1.22,1.33,color='k',alpha=0.2,zorder=0)
+ax2.axvspan(1.53,1.61,color='k',alpha=0.2,zorder=0)
+ax2.axvspan(1.35,1.48,color='k',alpha=0.2,zorder=0)
+ax2.set_yscale('log')
+ax2.set_ylim((1.*10.**13.,7.*10**19.))
+ax2.set_xlabel('Wavelength [$\mu$m]',fontsize=20)
+ax2.set_ylabel('Planet Flux [erg/s/m$^{3}$]',fontsize=20)
+ax2.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax2.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
 
+for i in np.arange(np.shape(templist)[0]/2.)*2.:
+	ax1.plot(miketp[:,int(i)],mikepressures,color=colors[int(i)],linewidth=3,zorder=1)
+ax1.set_xlim((500,4000))
+ax1.set_yscale('log')
+ax1.set_ylim((2*10.**2,5*10.**-4.))
+ax1.set_xlabel('Temperature [K]',fontsize=20)
+ax1.set_ylabel('Pressure [bar]',fontsize=20)
+ax1.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax1.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
 
+opacityfile=np.loadtxt('opacity.txt')
+
+ax3.plot(opacityfile[:,1]/opacityfile[:,2],opacityfile[:,0],color='k',linewidth=3,zorder=1)
+ax3.axvline(x=1,color='k',linestyle=':',linewidth=3,zorder=0)
+ax3.set_xscale('log')
+ax3.set_xlabel('$K_{J}$/$K_{B}$',fontsize=20)
+ax3.set_ylabel('T$_{eq}$ [K]',fontsize=20)
+ax3.invert_xaxis()
+ax3.set_xticks([0.01,0.1,1])
+ax3.set_xticklabels(['0.01','0.1','1'])
+ax3.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax3.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
+
+plt.tight_layout()
+plt.savefig('models.png',dpi=300)
+plt.show()
 
