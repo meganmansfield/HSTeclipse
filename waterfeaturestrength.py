@@ -1,10 +1,7 @@
 #UP TO DATE COPY 7/12/21
 import pysynphot as S
 import numpy as np 
-import pdb
 import matplotlib.pyplot as plt 
-import pickle
-from scipy.integrate import simps
 from scipy.optimize import leastsq
 import glob
 from matplotlib import rc
@@ -13,8 +10,6 @@ import matplotlib.cm as cmx
 import matplotlib.colors as mplcolors
 from scipy import stats
 from scipy import special
-import emcee
-import multiprocessing as mp
 
 #important constants
 h=6.626*10.**-34
@@ -96,26 +91,52 @@ def colormagmod(flist,Tlist,bd=False):
 		color[i]= mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint))
 	return fpmods,color
 
-def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
-	outflux=np.array([outpoint1,outpoint2])
+def colormagdata(datfile,planetparams):
+	#downsample through interpolation to the master wavelength grid
+	downsamplewave=np.interp(masterwavegrid,datfile[:,0],datfile[:,1]*10**-6.)
+	outpoint1=np.mean(downsamplewave[outset1])
+	outpoint2=np.mean(downsamplewave[outset2])
+	inpoint=np.mean(downsamplewave[inset])
+	meanerr=np.mean(datfile[:,2]*10.**-6.)
+	dellam=np.mean(np.diff(datfile[:,0]))
+	sp = S.Icat('k93models',planetparams[0],planetparams[2],planetparams[3])
+	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave=sp.wave*10.**-10  #in meters
+	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp=np.interp(masterwavegrid,wave*10**6.,flux)
+	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
+	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
+	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
+	sp2 = S.Icat('k93models',planetparams[0]+planetparams[1],planetparams[2],planetparams[3])
+	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave2=sp2.wave*10.**-10  #in meters
+	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
+	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
+	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
+	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
+	Fpout1=outpoint1*starout1/planetparams[4]**2.	#unit erg/s/m^2
+	Fpout2=outpoint2*starout2/planetparams[4]**2.
+	Fpin=inpoint*starin/planetparams[4]**2.
+	outflux=np.array([Fpout1,Fpout2])
 	wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
 	diff2=np.array([(edgewave2-edgewave1),(edgewave6-edgewave5)])
 	params0=np.array([1000.])
 	mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
 	fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
-	outerr1=meanerr*Fs[0]/rprs**2.*np.sqrt(dellam/(edgewave2-edgewave1))
-	temp=outpoint1*(Fs[0]-Fs2[0])/Fs[0]
+	outerr1=meanerr*starout1/planetparams[4]**2.*np.sqrt(dellam/(edgewave2-edgewave1))
+	temp=Fpout1*(starout1-starout12)/starout1
 	couterr1=np.sqrt(outerr1**2.+temp**2.)
-	outerr2=meanerr*Fs[1]/rprs**2.*np.sqrt(dellam/(edgewave6-edgewave5))
-	temp=outpoint2*(Fs[1]-Fs2[1])/Fs[1]
+	outerr2=meanerr*starout2/planetparams[4]**2.*np.sqrt(dellam/(edgewave6-edgewave5))
+	temp=Fpout2*(starout2-starout22)/starout2
 	couterr2=np.sqrt(outerr2**2.+temp**2.)
-	inerr=meanerr*Fs[2]/rprs**2.*np.sqrt(dellam/(edgewave4-edgewave3))
-	temp=inpoint*(Fs[2]-Fs2[2])/Fs[2]
+	inerr=meanerr*starin/planetparams[4]**2.*np.sqrt(dellam/(edgewave4-edgewave3))
+	temp=Fpin*(starin-starin2)/starin
 	cinerr=np.sqrt(inerr**2.+temp**2.)
 	netoerr=np.sqrt(couterr1**2.+couterr2**2.)
 	magerr=np.log10((netoerr+fakeinflux)/fakeinflux)
-	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+cinerr**2./(inpoint**2.*np.log(10.)**2.))
-	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint)),magerr,colorerr
+	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+cinerr**2./(Fpin**2.*np.log(10.)**2.))
+	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(Fpin)),magerr,colorerr
 
 def colormagbd(outpoint1,outpoint2,inpoint,outerr1,outerr2,inerr):
 	outflux=np.array([outpoint1,outpoint2])
@@ -258,248 +279,47 @@ plt.show()
 
 ################################################## DATA SETS ##############################
 #read in the data - data go wavelength, flux, flux err
-C2=np.loadtxt('../EclipsesPaper/CoRoT2.txt')
-H7=np.loadtxt('../EclipsesPaper/HAT7.txt')
-H32=np.loadtxt('../EclipsesPaper/HAT32A.txt')
-H41=np.loadtxt('../EclipsesPaper/hat41_new.txt')
-HD189=np.loadtxt('../EclipsesPaper/HD189733.txt')
-HD209=np.loadtxt('../EclipsesPaper/HD209458.txt')
-K7=np.loadtxt('../EclipsesPaper/kelt7_new.txt')
-Kep13=np.loadtxt('../EclipsesPaper/kep13_mostrecent.txt')
-T3=np.loadtxt('../EclipsesPaper/TrES3.txt')
-W4=np.loadtxt('../EclipsesPaper/WASP4.txt')
-W12=np.loadtxt('../EclipsesPaper/WASP12.txt')
-W18=np.loadtxt('../EclipsesPaper/WASP18.txt')
-W33=np.loadtxt('../EclipsesPaper/WASP33.txt')
-W43=np.loadtxt('../EclipsesPaper/WASP43.txt')
-W74=np.loadtxt('../EclipsesPaper/wasp74_new.txt')
-W76=np.loadtxt('../EclipsesPaper/WASP76_starcorr.txt')
-W79=np.loadtxt('../EclipsesPaper/wasp79_new.txt')
-W103=np.loadtxt('../EclipsesPaper/WASP103.txt')
-W121=np.loadtxt('../EclipsesPaper/wasp121_allvis.txt')
+C2=np.loadtxt('./Spectra/CoRoT2b.txt')
+H7=np.loadtxt('./Spectra/HAT7b.txt')
+H32=np.loadtxt('./Spectra/HAT32Ab.txt')
+H41=np.loadtxt('./Spectra/HAT41b.txt')
+HD189=np.loadtxt('./Spectra/HD189733b.txt')
+HD209=np.loadtxt('./Spectra/HD209458b.txt')
+K7=np.loadtxt('./Spectra/KELT7b.txt')
+Kep13=np.loadtxt('./Spectra/Kepler13Ab.txt')
+T3=np.loadtxt('./Spectra/TrES3b.txt')
+W4=np.loadtxt('./Spectra/WASP4b.txt')
+W12=np.loadtxt('./Spectra/WASP12b.txt')
+W18=np.loadtxt('./Spectra/WASP18b.txt')
+W33=np.loadtxt('./Spectra/WASP33b.txt')
+W43=np.loadtxt('./Spectra/WASP43b.txt')
+W74=np.loadtxt('./Spectra/WASP74b.txt')
+W76=np.loadtxt('./Spectra/WASP76b.txt')
+W79=np.loadtxt('./Spectra/WASP79b.txt')
+W103=np.loadtxt('./Spectra/WASP103b.txt')
+W121=np.loadtxt('./Spectra/WASP121b.txt')
 
-def colormagdata2(datfile,Teff,Tserr,met,logg,rprs):#(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
-	#downsample through interpolation to the master wavelength grid
-	downsamplewave=np.interp(masterwavegrid,datfile[:,0],datfile[:,1]*10**-6.)
-	outpoint1=np.mean(downsamplewave[outset1])
-	outpoint2=np.mean(downsamplewave[outset2])
-	inpoint=np.mean(downsamplewave[inset])
-	meanerr=np.mean(datfile[:,2]*10.**-6.)
-	dellam=np.mean(np.diff(datfile[:,0]))
-	sp = S.Icat('k93models',Teff,met,logg)
-	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave=sp.wave*10.**-10  #in meters
-	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp=np.interp(masterwavegrid,wave*10**6.,flux)
-	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
-	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
-	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
-	sp2 = S.Icat('k93models',Teff+Tserr,met,logg)
-	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave2=sp2.wave*10.**-10  #in meters
-	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
-	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
-	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
-	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
-	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
-	Fpout2=outpoint2*starout2/rprs**2.
-	Fpin=inpoint*starin/rprs**2.
-	# Fs=np.array([starout1,starout2,starin])
-	# Fs2=np.array([starout12,starout22,starin2])
-#def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
-	#colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
-	outflux=np.array([Fpout1,Fpout2])
-	wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
-	diff2=np.array([(edgewave2-edgewave1),(edgewave6-edgewave5)])
-	params0=np.array([1000.])
-	mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
-	fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
-	outerr1=meanerr*starout1/rprs**2.*np.sqrt(dellam/(edgewave2-edgewave1))
-	temp=Fpout1*(starout1-starout12)/starout1
-	couterr1=np.sqrt(outerr1**2.+temp**2.)
-	outerr2=meanerr*starout2/rprs**2.*np.sqrt(dellam/(edgewave6-edgewave5))
-	temp=Fpout2*(starout2-starout22)/starout2
-	couterr2=np.sqrt(outerr2**2.+temp**2.)
-	inerr=meanerr*starin/rprs**2.*np.sqrt(dellam/(edgewave4-edgewave3))
-	temp=Fpin*(starin-starin2)/starin
-	cinerr=np.sqrt(inerr**2.+temp**2.)
-	netoerr=np.sqrt(couterr1**2.+couterr2**2.)
-	magerr=np.log10((netoerr+fakeinflux)/fakeinflux)
-	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+cinerr**2./(inpoint**2.*np.log(10.)**2.))
-	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint)),magerr,colorerr
+allplanetparams=np.loadtxt('planetparams.txt')
 
-def getcolor(Teff,Tserr,met,logg,rprs,outpoint1,outpoint2,inpoint,meanerr,dellam):
-	sp = S.Icat('k93models',Teff,met,logg)
-	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave=sp.wave*10.**-10  #in meters
-	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp=np.interp(masterwavegrid,wave*10**6.,flux)
-	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
-	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
-	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
-	sp2 = S.Icat('k93models',Teff+Tserr,met,logg)
-	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave2=sp2.wave*10.**-10  #in meters
-	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
-	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
-	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
-	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
-	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
-	Fpout2=outpoint2*starout2/rprs**2.
-	Fpin=inpoint*starin/rprs**2.
-	Fs=np.array([starout1,starout2,starin])
-	Fs2=np.array([starout12,starout22,starin2])
-	color=colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
-	return color
-#downsample through interpolation to the master wavelength grid
-H7colortest=colormagdata2(H7,6441.,69.,0.15,4.02,0.07809)
-
-H7down=np.interp(masterwavegrid,H7[:,0],H7[:,1]*10.**-6.)
-H32down=np.interp(masterwavegrid,H32[:,0],H32[:,1]*10.**-6.)
-H41down=np.interp(masterwavegrid,H41[:,0],H41[:,1]*10.**-2.)
-HD189down=np.interp(masterwavegrid,HD189[:,0],HD189[:,1]*10.**-6.)
-HD209down=np.interp(masterwavegrid,HD209[:,0],HD209[:,1]*10.**-6.)
-K7down=np.interp(masterwavegrid,K7[:,0],K7[:,1]*10.**-2.)
-W18down=np.interp(masterwavegrid,W18[:,0],W18[:,1]*10.**-6.)
-W33down=np.interp(masterwavegrid,W33[:,0],W33[:,1]*10.**-6.)
-W43down=np.interp(masterwavegrid,W43[:,0],W43[:,1]*10.**-6.)
-W74down=np.interp(masterwavegrid,W74[:,0],W74[:,1]*10.**-2.)
-W76down=np.interp(masterwavegrid,W76[:,0],W76[:,1]*10.**-2.)
-W79down=np.interp(masterwavegrid,W79[:,0],W79[:,1]*10.**-2.)
-W103down=np.interp(masterwavegrid,W103[:,0],W103[:,1]*10.**-6.)
-W121down=np.interp(masterwavegrid,W121[:,0],W121[:,1]*10.**-2.)
-
-C2down=np.interp(masterwavegrid,C2[:,0],C2[:,1]*10.**-6.)
-Kep13down=np.interp(masterwavegrid,Kep13[:,0],Kep13[:,1]*10.**-2.)
-T3down=np.interp(masterwavegrid,T3[:,0],T3[:,1]*10.**-6.)
-W4down=np.interp(masterwavegrid,W4[:,0],W4[:,1]*10.**-6.)
-W12down=np.interp(masterwavegrid,W12[:,0],W12[:,1]*10.**-6.)
-
-#average in vs. out of band stuff
-outpoint1H7=np.mean(H7down[outset1])
-outpoint2H7=np.mean(H7down[outset2])
-inpointH7=np.mean(H7down[inset])
-outpoint1H32=np.mean(H32down[outset1])
-outpoint2H32=np.mean(H32down[outset2])
-inpointH32=np.mean(H32down[inset])
-outpoint1H41=np.mean(H41down[outset1])
-outpoint2H41=np.mean(H41down[outset2])
-inpointH41=np.mean(H41down[inset])
-outpoint1HD189=np.mean(HD189down[outset1])
-outpoint2HD189=np.mean(HD189down[outset2])
-inpointHD189=np.mean(HD189down[inset])
-outpoint1HD209=np.mean(HD209down[outset1])
-outpoint2HD209=np.mean(HD209down[outset2])
-inpointHD209=np.mean(HD209down[inset])
-outpoint1K7=np.mean(K7down[outset1])
-outpoint2K7=np.mean(K7down[outset2])
-inpointK7=np.mean(K7down[inset])
-outpoint1W18=np.mean(W18down[outset1])
-outpoint2W18=np.mean(W18down[outset2])
-inpointW18=np.mean(W18down[inset])
-outpoint1W33=np.mean(W33down[outset1])
-outpoint2W33=np.mean(W33down[outset2])
-inpointW33=np.mean(W33down[inset])
-outpoint1W43=np.mean(W43down[outset1])
-outpoint2W43=np.mean(W43down[outset2])
-inpointW43=np.mean(W43down[inset])
-outpoint1W74=np.mean(W74down[outset1])
-outpoint2W74=np.mean(W74down[outset2])
-inpointW74=np.mean(W74down[inset])
-outpoint1W76=np.mean(W76down[outset1])
-outpoint2W76=np.mean(W76down[outset2])
-inpointW76=np.mean(W76down[inset])
-outpoint1W79=np.mean(W79down[outset1])
-outpoint2W79=np.mean(W79down[outset2])
-inpointW79=np.mean(W79down[inset])
-outpoint1W103=np.mean(W103down[outset1])
-outpoint2W103=np.mean(W103down[outset2])
-inpointW103=np.mean(W103down[inset])
-outpoint1W121=np.mean(W121down[outset1])
-outpoint2W121=np.mean(W121down[outset2])
-inpointW121=np.mean(W121down[inset])
-
-outpoint1C2=np.mean(C2down[outset1])
-outpoint2C2=np.mean(C2down[outset2])
-inpointC2=np.mean(C2down[inset])
-outpoint1Kep13=np.mean(Kep13down[outset1])
-outpoint2Kep13=np.mean(Kep13down[outset2])
-inpointKep13=np.mean(Kep13down[inset])
-outpoint1T3=np.mean(T3down[outset1])
-outpoint2T3=np.mean(T3down[outset2])
-inpointT3=np.mean(T3down[inset])
-outpoint1W4=np.mean(W4down[outset1])
-outpoint2W4=np.mean(W4down[outset2])
-inpointW4=np.mean(W4down[inset])
-outpoint1W12=np.mean(W12down[outset1])
-outpoint2W12=np.mean(W12down[outset2])
-inpointW12=np.mean(W12down[inset])
-
-meanerrH7=np.mean(H7[:,2]*10.**-6.)
-meanerrH32=np.mean(H32[:,2]*10.**-6.)
-meanerrH41=np.mean(H41[:,2]*10.**-2.)
-meanerrHD189=np.mean(HD189[:,2]*10.**-6.)
-meanerrHD209=np.mean(HD209[:,2]*10.**-6.)
-meanerrK7=np.mean(K7[:,2]*10.**-2.)
-meanerrW18=np.mean(W18[:,2]*10.**-6.)
-meanerrW33=np.mean(W33[:,2]*10.**-6.)
-meanerrW43=np.mean(W43[:,2]*10.**-6.)
-meanerrW74=np.mean(W74[:,2]*10.**-2.)
-meanerrW76=np.mean(W76[:,2]*10.**-2.)
-meanerrW79=np.mean(W79[:,2]*10.**-2.)
-meanerrW103=np.mean(W103[:,2]*10.**-6.)
-meanerrW121=np.mean(W121[:,2]*10.**-2.)
-
-meanerrC2=np.mean(C2[:,2]*10.**-6.)
-meanerrKep13=np.mean(Kep13[:,2]*10.**-2.)
-meanerrT3=np.mean(T3[:,2]*10.**-6.)
-meanerrW4=np.mean(W4[:,2]*10.**-6.)
-meanerrW12=np.mean(W12[:,2]*10.**-6.)
-
-dellamH7=np.mean(np.diff(H7[:,0]))
-dellamH32=np.mean(np.diff(H32[:,0]))
-dellamH41=np.mean(np.diff(H41[:,0]))
-dellamHD189=np.mean(np.diff(HD189[:,0]))
-dellamHD209=np.mean(np.diff(HD209[:,0]))
-dellamK7=np.mean(np.diff(K7[:,0]))
-dellamW18=np.mean(np.diff(W18[:,0]))
-dellamW33=np.mean(np.diff(W33[:,0]))
-dellamW43=np.mean(np.diff(W43[:,0]))
-dellamW74=np.mean(np.diff(W74[:,0]))
-dellamW76=np.mean(np.diff(W76[:,0]))
-dellamW79=np.mean(np.diff(W79[:,0]))
-dellamW103=np.mean(np.diff(W103[:,0]))
-dellamW121=np.mean(np.diff(W121[:,0]))
-
-dellamC2=np.mean(np.diff(C2[:,0]))
-dellamKep13=np.mean(np.diff(Kep13[:,0]))
-dellamT3=np.mean(np.diff(T3[:,0]))
-dellamW4=np.mean(np.diff(W4[:,0]))
-dellamW12=np.mean(np.diff(W12[:,0]))
-
-#param order: Teff, Tserr, met, logg, rprs, outpoint1, outpoint2, inpoint, meanerr, dellam
-colorH7=getcolor(6441.,69.,0.15,4.02,0.07809,outpoint1H7,outpoint2H7,inpointH7,meanerrH7,dellamH7)
-colorH32=getcolor(6207.,88.,-0.04,4.33,0.1478,outpoint1H32,outpoint2H32,inpointH32,meanerrH32,dellamH32)
-colorH41=getcolor(6390.,100.,0.21,4.14,0.1028,outpoint1H41,outpoint2H41,inpointH41,meanerrH41,dellamH41)
-colorHD189=getcolor(5111.,77.,-0.04,4.59,0.1514,outpoint1HD189,outpoint2HD189,inpointHD189,meanerrHD189,dellamHD189)
-colorHD209=getcolor(6092.,103.,0.0,4.28,0.1174,outpoint1HD209,outpoint2HD209,inpointHD209,meanerrHD209,dellamHD209)
-colorK7=getcolor(6789.,50.,0.139,4.149,0.0888,outpoint1K7,outpoint2K7,inpointK7,meanerrK7,dellamK7)
-colorW18=getcolor(6368.,66.,0.11,4.37,0.0935,outpoint1W18,outpoint2W18,inpointW18,meanerrW18,dellamW18)
-colorW33=getcolor(7430.,100.,0.1,4.3,0.1037,outpoint1W33,outpoint2W33,inpointW33,meanerrW33,dellamW33)
-colorW43=getcolor(4520.,120.,-0.01,4.645,0.1558,outpoint1W43,outpoint2W43,inpointW43,meanerrW43,dellamW43)
-colorW74=getcolor(5990.,110.,0.39,4.39,0.09803,outpoint1W74,outpoint2W74,inpointW74,meanerrW74,dellamW74)
-colorW76=getcolor(6250.,100.,0.23,4.128,0.10873,outpoint1W76,outpoint2W76,inpointW76,meanerrW76,dellamW76)
-colorW79=getcolor(6600.,100.,0.03,4.2,0.1049,outpoint1W79,outpoint2W79,inpointW79,meanerrW79,dellamW79)
-colorW103=getcolor(6110.,160.,0.06,4.22,0.1093,outpoint1W103,outpoint2W103,inpointW103,meanerrW103,dellamW103)
-colorW121=getcolor(6460.,140.,0.13,4.2,0.1245,outpoint1W121,outpoint2W121,inpointW121,meanerrW121,dellamW121)
-
-colorC2=getcolor(5575.,66.,-0.04,4.51,0.1626,outpoint1C2,outpoint2C2,inpointC2,meanerrC2,dellamC2)
-colorKep13=getcolor(7650.,250.,0.2,4.2,0.08047,outpoint1Kep13,outpoint2Kep13,inpointKep13,meanerrKep13,dellamKep13)
-colorT3=getcolor(5514.,69.,-0.2,4.57,0.1619,outpoint1T3,outpoint2T3,inpointT3,meanerrT3,dellamT3)
-colorW4=getcolor(5500.,100.,-0.03,4.5,0.1485,outpoint1W4,outpoint2W4,inpointW4,meanerrW4,dellamW4)
-colorW12=getcolor(6118.,64.,0.07,4.14,0.115,outpoint1W12,outpoint2W12,inpointW12,meanerrW12,dellamW12)
+colorC2=colormagdata(C2,allplanetparams[0])
+colorH7=colormagdata(H7,allplanetparams[1])
+colorH32=colormagdata(H32,allplanetparams[2])
+colorH41=colormagdata(H41,allplanetparams[3])
+colorHD189=colormagdata(HD189,allplanetparams[4])
+colorHD209=colormagdata(HD209,allplanetparams[5])
+colorK7=colormagdata(K7,allplanetparams[6])
+colorKep13=colormagdata(Kep13,allplanetparams[7])
+colorT3=colormagdata(T3,allplanetparams[8])
+colorW4=colormagdata(W4,allplanetparams[9])
+colorW12=colormagdata(W12,allplanetparams[10])
+colorW18=colormagdata(W18,allplanetparams[11])
+colorW33=colormagdata(W33,allplanetparams[12])
+colorW43=colormagdata(W43,allplanetparams[13])
+colorW74=colormagdata(W74,allplanetparams[14])
+colorW76=colormagdata(W76,allplanetparams[15])
+colorW79=colormagdata(W79,allplanetparams[16])
+colorW103=colormagdata(W103,allplanetparams[17])
+colorW121=colormagdata(W121,allplanetparams[18])
 
 ####################### Adding Brown Dwarfs from Manjavacas et al. (2019) #########################################
 bddatalist=glob.glob('./ManjavacasData/*.txt')
@@ -531,7 +351,7 @@ delTbd=np.array([20,6.5,4,0.5,0.5,0.5,5.5,0.5,0.5,0.5,0.5,0.5,0.5,5,5,0.5,0.5,0.
 	0.5,0.5,0.5,0.5,0.5,0.5,6.5,0.5,6.5,0.5,7,1.5,1,4,4,5,0.5,4,4.5,22.5,3.5,0.5,0.5,6.5,\
 	0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,4])
 
-###################### MAIN FIGURE FULLY ON TEMPERATURE AXIS ####################################
+###################### FIGURE 3 ####################################
 #testing fill between
 rc('axes',linewidth=2)
 fillhighCO=np.interp(color_lowCO[:,0],color_highCO[:,0],color_highCO[:,2])
@@ -541,7 +361,6 @@ fillhighmet=np.interp(color_metneg15[:,0],color_lowCO[:,0],color_lowCO[:,2])
 fillheat=np.interp(color_tintTF18[:,0],color_delayTiO3000[:,0],color_delayTiO3000[:,2])
 fillg=np.interp(color_grav40[:,0],color_highCO[:,0],color_highCO[:,2])
 filltop=np.interp(color_lowCO[:,0],color_metpos15[:,0],color_metpos15[:,2])
-
 fillbd=np.interp(color_bdlogg3[:,0],color_bdmetneg1[:,0],color_bdmetneg1[:,2])
 
 #adding colormap for equilibrium temps
@@ -628,7 +447,6 @@ ax1.text(colorKep13[2]+0.03,colorKep13[0]-100,'Kepler-13Ab',color=scalarMap.to_r
 ax1.errorbar(colorW12[2],colorW12[0],xerr=colorW12[4],yerr=70.,mec=scalarMap.to_rgba(equtemps[19]),mfc=scalarMap.to_rgba(equtemps[19]),ecolor=scalarMap.to_rgba(equtemps[19]),marker='.',markersize=15,linestyle='none',linewidth=3,zorder=4)
 ax1.text(colorW12[2]+0.0555,colorW12[0]-20,'WASP-12b',color=scalarMap.to_rgba(equtemps[19]),fontsize=15,zorder=3)#'xkcd:lilac'
 
-####### adding brown dwarfs from Manjavacas ###########################
 for i in goodlist:
 	ax1.errorbar(bdcolors[i,2],bdcolors[i,0],xerr=bdcolors[i,4],yerr=delTbd[i],color=pointcolor2,marker='.',linestyle='none',linewidth=3,zorder=4,markersize=15)
 
@@ -643,9 +461,9 @@ cbar.set_label('Equilibrium Temperature',fontsize=15)
 plt.tight_layout()
 plt.savefig('Fig3.png',dpi=300)
 plt.show()
-############### MAIN FIGURE TEMPERATURE END ##########################################
+############### FIGURE 3 END ##########################################
 
-################# INDIVIDUAL MODEL TRACKS ON TEMPERATURE AXIS #########################
+################# SUPPLEMENTARY FIGURE 4 #########################
 
 colors=pl.cm.inferno(np.linspace(0,0.9,5))
 
@@ -692,10 +510,8 @@ plt.tight_layout()
 plt.savefig('clouds.png',dpi=300)
 plt.show()
 
-#################### END INDIVIDUAL MODEL PLOTS ####################################################################
 
-
-########################## COMBO INDIVIDUAL MODELS INTO ONE GIANT FIGURE ###########################
+########################## FIGURE 4 ###########################
 fig,((ax1,ax2),(ax3,ax4),(ax5,ax6))=plt.subplots(3,2,figsize=(21,20))
 
 ax1.axvline(x=0.0,color='k',zorder=0)
@@ -865,7 +681,7 @@ ax5.set_yticks(ticks=[1500,2000,2500,3000,3500])
 ax5.set_yticklabels(labels=['1500','2000','2500','3000','3500'])
 ax5.set_yticks(ticks=[1300,1400,1600,1700,1800,1900,2100,2200,2300,2400,2600,2700,2800.2900,3100,3200,3300,3400],minor=True)
 ax5.set_yticklabels([],minor=True)
-ax5.set_ylabel('Dayside Temperature [K]',fontsize=25)#Blackbody Temperature [K]
+ax5.set_ylabel('Dayside Temperature [K]',fontsize=25)
 ax5.set_xlabel('Water Feature Strength ($S_{H_{2}O}$)',fontsize=25)
 ax5.tick_params(which='major',labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
 ax5.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
@@ -914,9 +730,7 @@ plt.tight_layout()
 plt.savefig('individualmodels.png',dpi=300)
 plt.show()
 
-########################### END COMBO MODELS ############################################
-
-##########################Interpolate Mike's fiducial models to make the explanation plot
+########################## SUPPLEMENTARY FIGURE 1 ###########################
 
 datwave=W43[:,0]
 datflux=W43[:,1]*10**-6.
@@ -927,7 +741,7 @@ tempwavegrid=masterwavegrid*10**-6.
 
 def indplanetbbod(pltemp,plwave,startemp,starmet,starlogg,rprs):
 	plfinebbod=fakedata_bbod(tempwavegrid,pltemp) #erg/s/m^2/m
-	sp = S.Icat('k93models',startemp,starmet,starlogg)	#Parameters go temp, metallicity, logg
+	sp = S.Icat('k93models',startemp,starmet,starlogg)
 	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
 	wave=sp.wave*10.**-10  #in meters
 	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
@@ -973,129 +787,56 @@ plt.tight_layout()
 plt.savefig('explanation.png',dpi=300)
 plt.show()
 
-#################### CALCULATE CHI-SQUARED FOR DATA FITTING EACH MODEL IN COLOR-MAG SPACE #########################
+#################### CALCULATE CHI-SQUARED FOR DATA FITTING EACH MODEL #########################
 
-#with stare mode
 xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],colorH32[2],colorW4[2],colorW79[2],colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2],colorW103[2],colorW33[2],colorKep13[2]])
 ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1],colorW103[1],colorW33[1],colorKep13[1]])
 xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4],colorW103[4],colorW33[4],colorKep13[4]])
-yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3],colorW103[3],colorW33[3],colorKep13[3]])
 
 numpoints=19.
-xvals_fiducial=np.interp(ylist,color_fiducial[:,1],color_fiducial[:,2])
-chi2_fiducial=np.sum(((xvals_fiducial-xlist)/xerrs)**2.)
-chi2red_fiducial=chi2_fiducial/numpoints
-signif_fiducial=stats.chi2.sf(chi2_fiducial,numpoints)
-sigma_fiducial=special.erfinv(1-signif_fiducial)*np.sqrt(2.)
 
-xvals_lowCO=np.interp(ylist,color_lowCO[:,1],color_lowCO[:,2])
-chi2_lowCO=np.sum(((xvals_lowCO-xlist)/xerrs)**2.)
-chi2red_lowCO=chi2_lowCO/numpoints
-signif_lowCO=stats.chi2.sf(chi2_lowCO,numpoints)
-sigma_lowCO=special.erfinv(1-signif_lowCO)*np.sqrt(2.)
+def chisqcalc(xlist,ylist,xerrs,modelcolors):
+	xvals=np.interp(ylist,modelcolors[:,1],modelcolors[:,2])
+	chi2=np.sum(((xvals-xlist)/xerrs)**2.)
+	chi2red=chi2/numpoints
+	signif=stats.chi2.sf(chi2,numpoints)
+	sigma=special.erfinv(1-signif)*np.sqrt(2.)
+	return sigma
 
-xvals_highCO=np.interp(ylist,color_highCO[:,1],color_highCO[:,2])
-chi2_highCO=np.sum(((xvals_highCO-xlist)/xerrs)**2.)
-chi2red_highCO=chi2_highCO/numpoints
-signif_highCO=stats.chi2.sf(chi2_highCO,numpoints)
-sigma_highCO=special.erfinv(1-signif_highCO)*np.sqrt(2.)
-
-xvals_delayTiO2000=np.interp(ylist,color_delayTiO2000[:,1],color_delayTiO2000[:,2])
-chi2_delayTiO2000=np.sum(((xvals_delayTiO2000-xlist)/xerrs)**2.)
-chi2red_delayTiO2000=chi2_delayTiO2000/numpoints
-signif_delayTiO2000=stats.chi2.sf(chi2_delayTiO2000,numpoints)
-sigma_delayTiO2000=special.erfinv(1-signif_delayTiO2000)*np.sqrt(2.)
-
-xvals_delayTiO2500=np.interp(ylist,color_delayTiO2500[:,1],color_delayTiO2500[:,2])
-chi2_delayTiO2500=np.sum(((xvals_delayTiO2500-xlist)/xerrs)**2.)
-chi2red_delayTiO2500=chi2_delayTiO2500/numpoints
-signif_delayTiO2500=stats.chi2.sf(chi2_delayTiO2500,numpoints)
-sigma_delayTiO2500=special.erfinv(1-signif_delayTiO2500)*np.sqrt(2.)
-
-xvals_delayTiO3000=np.interp(ylist,color_delayTiO3000[:,1],color_delayTiO3000[:,2])
-chi2_delayTiO3000=np.sum(((xvals_delayTiO3000-xlist)/xerrs)**2.)
-chi2red_delayTiO3000=chi2_delayTiO3000/numpoints
-signif_delayTiO3000=stats.chi2.sf(chi2_delayTiO3000,numpoints)
-sigma_delayTiO3000=special.erfinv(1-signif_delayTiO3000)*np.sqrt(2.)
-
-xvals_grav20=np.interp(ylist,color_grav20[:,1],color_grav20[:,2])
-chi2_grav20=np.sum(((xvals_grav20-xlist)/xerrs)**2.)
-chi2red_grav20=chi2_grav20/numpoints
-signif_grav20=stats.chi2.sf(chi2_grav20,numpoints)
-sigma_grav20=special.erfinv(1-signif_grav20)*np.sqrt(2.)
-
-xvals_grav40=np.interp(ylist,color_grav40[:,1],color_grav40[:,2])
-chi2_grav40=np.sum(((xvals_grav40-xlist)/xerrs)**2.)
-chi2red_grav40=chi2_grav40/numpoints
-signif_grav40=stats.chi2.sf(chi2_grav40,numpoints)
-sigma_grav40=special.erfinv(1-signif_grav40)*np.sqrt(2.)
-
-xvals_metneg15=np.interp(ylist,color_metneg15[:,1],color_metneg15[:,2])
-chi2_metneg15=np.sum(((xvals_metneg15-xlist)/xerrs)**2.)
-chi2red_metneg15=chi2_metneg15/numpoints
-signif_metneg15=stats.chi2.sf(chi2_metneg15,numpoints)
-sigma_metneg15=special.erfinv(1-signif_metneg15)*np.sqrt(2.)
-
-xvals_metpos15=np.interp(ylist,color_metpos15[:,1],color_metpos15[:,2])
-chi2_metpos15=np.sum(((xvals_metpos15-xlist)/xerrs)**2.)
-chi2red_metpos15=chi2_metpos15/numpoints
-signif_metpos15=stats.chi2.sf(chi2_metpos15,numpoints)
-sigma_metpos15=special.erfinv(1-signif_metpos15)*np.sqrt(2.)
-
-xvals_tintTF18=np.interp(ylist,color_tintTF18[:,1],color_tintTF18[:,2])
-chi2_tintTF18=np.sum(((xvals_tintTF18-xlist)/xerrs)**2.)
-chi2red_tintTF18=chi2_tintTF18/numpoints
-signif_tintTF18=stats.chi2.sf(chi2_tintTF18,numpoints)
-sigma_tintTF18=special.erfinv(1-signif_tintTF18)*np.sqrt(2.)
+sigma_fiducial=chisqcalc(xlist,ylist,xerrs,color_fiducial)
+sigma_lowCO=chisqcalc(xlist,ylist,xerrs,color_lowCO)
+sigma_highCO=chisqcalc(xlist,ylist,xerrs,color_highCO)
+sigma_delayTiO2000=chisqcalc(xlist,ylist,xerrs,color_delayTiO2000)
+sigma_delayTiO2500=chisqcalc(xlist,ylist,xerrs,color_delayTiO2500)
+sigma_delayTiO3000=chisqcalc(xlist,ylist,xerrs,color_delayTiO3000)
+sigma_grav20=chisqcalc(xlist,ylist,xerrs,color_grav20)
+sigma_grav40=chisqcalc(xlist,ylist,xerrs,color_grav40)
+sigma_metneg15=chisqcalc(xlist,ylist,xerrs,color_metneg15)
+sigma_metpos15=chisqcalc(xlist,ylist,xerrs,color_metpos15)
+sigma_tintTF18=chisqcalc(xlist,ylist,xerrs,color_tintTF18)
 
 #Giving each planet an appropriate gravity compared to the fiducial model:
-xvals_changegrav=np.array([xvals_fiducial[0],xvals_fiducial[1],xvals_grav40[2],xvals_fiducial[3],\
-	xvals_fiducial[4],xvals_grav20[5],xvals_fiducial[6],xvals_fiducial[7],xvals_fiducial[8],\
-	xvals_fiducial[9],xvals_fiducial[10],xvals_grav40[11],xvals_fiducial[12],xvals_fiducial[13],\
-	xvals_fiducial[14],xvals_grav40[15],xvals_fiducial[16],xvals_fiducial[17],xvals_grav40[18]])
+# xvals_changegrav=np.array([xvals_fiducial[0],xvals_fiducial[1],xvals_grav40[2],xvals_fiducial[3],\
+# 	xvals_fiducial[4],xvals_grav20[5],xvals_fiducial[6],xvals_fiducial[7],xvals_fiducial[8],\
+# 	xvals_fiducial[9],xvals_fiducial[10],xvals_grav40[11],xvals_fiducial[12],xvals_fiducial[13],\
+# 	xvals_fiducial[14],xvals_grav40[15],xvals_fiducial[16],xvals_fiducial[17],xvals_grav40[18]])
 
-chi2_changegrav=np.sum(((xvals_changegrav-xlist)/xerrs)**2.)
-chi2red_changegrav=chi2_changegrav/numpoints
-signif_changegrav=stats.chi2.sf(chi2_changegrav,numpoints)
-sigma_changegrav=special.erfinv(1-signif_changegrav)*np.sqrt(2.)
+# chi2_changegrav=np.sum(((xvals_changegrav-xlist)/xerrs)**2.)
+# chi2red_changegrav=chi2_changegrav/numpoints
+# signif_changegrav=stats.chi2.sf(chi2_changegrav,numpoints)
+# sigma_changegrav=special.erfinv(1-signif_changegrav)*np.sqrt(2.)
 
 #For comparison to brown dwarf models, which don't go all the way to higher temperatures. This only includes planets with Tday<~3000 K
 xlist=np.array([colorHD189[2],colorHD209[2],colorW43[2],colorC2[2],colorT3[2],colorH32[2],colorW4[2],colorW79[2],colorW74[2],colorH41[2],colorK7[2],colorW76[2],colorW121[2],colorH7[2],colorW12[2],colorW18[2]])
 ylist=np.array([colorHD189[1],colorHD209[1],colorW43[1],colorC2[1],colorT3[1],colorH32[1],colorW4[1],colorW79[1],colorW74[1],colorH41[1],colorK7[1],colorW76[1],colorW121[1],colorH7[1],colorW12[1],colorW18[1]])
 xerrs=np.array([colorHD189[4],colorHD209[4],colorW43[4],colorC2[4],colorT3[4],colorH32[4],colorW4[4],colorW79[4],colorW74[4],colorH41[4],colorK7[4],colorW76[4],colorW121[4],colorH7[4],colorW12[4],colorW18[4]])
-yerrs=np.array([colorHD189[3],colorHD209[3],colorW43[3],colorC2[3],colorT3[3],colorH32[3],colorW4[3],colorW79[3],colorW74[3],colorH41[3],colorK7[3],colorW76[3],colorW121[3],colorH7[3],colorW12[3],colorW18[3]])
 
 numpoints=16.
 
-xvals_bd=np.interp(ylist,color_bd[:,1],color_bd[:,2])
-chi2_bd=np.sum(((xvals_bd-xlist)/xerrs)**2.)
-chi2red_bd=chi2_bd/numpoints
-signif_bd=stats.chi2.sf(chi2_bd,numpoints)
-sigma_bd=special.erfinv(1-signif_bd)*np.sqrt(2.)
-
-xvals_bdlogg3=np.interp(ylist,color_bdlogg3[:,1],color_bdlogg3[:,2])
-chi2_bdlogg3=np.sum(((xvals_bdlogg3-xlist)/xerrs)**2.)
-chi2red_bdlogg3=chi2_bdlogg3/numpoints
-signif_bdlogg3=stats.chi2.sf(chi2_bdlogg3,numpoints)
-sigma_bdlogg3=special.erfinv(1-signif_bdlogg3)*np.sqrt(2.)
-
-xvals_bdlogg4=np.interp(ylist,color_bdlogg4[:,1],color_bdlogg4[:,2])
-chi2_bdlogg4=np.sum(((xvals_bdlogg4-xlist)/xerrs)**2.)
-chi2red_bdlogg4=chi2_bdlogg4/numpoints
-signif_bdlogg4=stats.chi2.sf(chi2_bdlogg4,numpoints)
-sigma_bdlogg4=special.erfinv(1-signif_bdlogg4)*np.sqrt(2.)
-
-xvals_bdmetneg1=np.interp(ylist,color_bdmetneg1[:,1],color_bdmetneg1[:,2])
-chi2_bdmetneg1=np.sum(((xvals_bdmetneg1-xlist)/xerrs)**2.)
-chi2red_bdmetneg1=chi2_bdmetneg1/numpoints
-signif_bdmetneg1=stats.chi2.sf(chi2_bdmetneg1,numpoints)
-sigma_bdmetneg1=special.erfinv(1-signif_bdmetneg1)*np.sqrt(2.)
-
-xvals_bdmetpos1=np.interp(ylist,color_bdmetpos1[:,1],color_bdmetpos1[:,2])
-chi2_bdmetpos1=np.sum(((xvals_bdmetpos1-xlist)/xerrs)**2.)
-chi2red_bdmetpos1=chi2_bdmetpos1/numpoints
-signif_bdmetpos1=stats.chi2.sf(chi2_bdmetpos1,numpoints)
-sigma_bdmetpos1=special.erfinv(1-signif_bdmetpos1)*np.sqrt(2.)
-
+sigma_bd=chisqcalc(xlist,ylist,xerrs,color_bd)
+sigma_bdlogg3=chisqcalc(xlist,ylist,xerrs,color_bdlogg3)
+sigma_bdlogg4=chisqcalc(xlist,ylist,xerrs,color_bdlogg4)
+sigma_bdmetneg1=chisqcalc(xlist,ylist,xerrs,color_bdmetneg1)
+sigma_bdmetpos1=chisqcalc(xlist,ylist,xerrs,color_bdmetpos1)
 
 
