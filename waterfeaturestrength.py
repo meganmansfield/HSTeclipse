@@ -69,14 +69,32 @@ def trapezoidint(xvals,yvals):
 		total+=(yvals[i]+yvals[i+1])*(xvals[i+1]-xvals[i])*0.5
 	return total
 
-def colormagmod(outpoint1,outpoint2,inpoint):
-	outflux=np.array([outpoint1,outpoint2])
-	wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
-	diff2=np.array([(edgewave2-edgewave1),(edgewave6-edgewave5)])
-	params0=np.array([1000.])
-	mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
-	fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
-	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint))
+def colormagmod(flist,Tlist,bd=False):
+	fpmods=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist)[0]))
+	color=np.zeros((np.shape(flist)[0],3))
+	for f in flist:
+		thefile=np.loadtxt(f)
+		s1=f.split('_')
+		if bd==False:
+			inds1=np.where(np.array(s1)=='Tirr')[0]
+		else:
+			inds1=np.where(np.array(s1)=='Teff')[0]
+		placer=np.argmin(abs(float(s1[inds1[0]+1])-Tlist))
+		filewaves=thefile[:,0]	#microns
+		filefluxpl=thefile[:,1]*10**7.	#erg/s/m^2/m
+		fpmods[:,placer]=np.interp(masterwavegrid,filewaves,filefluxpl)
+	for i in np.arange(np.shape(flist)[0]):
+		outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods[:,i][outset1])
+		outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods[:,i][outset2])
+		inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods[:,i][inset])
+		outflux=np.array([outpoint1,outpoint2])
+		wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
+		diff2=np.array([(edgewave2-edgewave1),(edgewave6-edgewave5)])
+		params0=np.array([1000.])
+		mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
+		fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
+		color[i]= mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint))
+	return fpmods,color
 
 def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
 	outflux=np.array([outpoint1,outpoint2])
@@ -120,436 +138,224 @@ outset2=np.where((masterwavegrid>edgewave5)&(masterwavegrid<edgewave6))
 inset=np.where((masterwavegrid>edgewave3)&(masterwavegrid<edgewave4))
 
 ############################################## MIKE MODELS #######################################
-#reading in all of Mike's models - base units W/m^2
+#reading in all Sc-CHIMERA models - base units W/m^2
 templist=np.array([500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600,1650,1700,1750,1800,1850,1900,2000,2100,2200,2300,2400,2500,2600,2700,2800,2900,3000,3200,3400,3600])
-flist_fiducial=glob.glob('../a_new_new_grid/FIDUCIAL/*spec.txt')
-flist_lowCO=glob.glob('../a_new_new_grid/CtoO/*0.01_spec.txt')
-flist_highCO=glob.glob('../a_new_new_grid/CtoO/*0.85_spec.txt')
-flist_delayTiO2000=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_2000*spec.txt')
-flist_delayTiO2500=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_2500*spec.txt')
-flist_delayTiO3000=glob.glob('../a_new_new_grid/TiO_VO_COLD_TRAP/*DELAY_TiO_VO_3000*spec.txt')
-flist_grav20=glob.glob('../a_new_new_grid/LOGG/LOGG_2.0_*spec.txt')
-flist_grav40=glob.glob('../a_new_new_grid/LOGG/LOGG_4.0_*spec.txt')
-flist_metneg15=glob.glob('../a_new_new_grid/METALICITY/*logZ_-1.5*spec.txt')
-flist_metpos15=glob.glob('../a_new_new_grid/METALICITY/*logZ_+1.5*spec.txt')
-flist_tintTF18=glob.glob('../a_new_new_grid/TINT_TREND/*TF18_TINT*spec.txt')
-flist_quench=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*NOCLOUD*spec.txt')
-flist_fsedlow=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*fsed_0.1*spec.txt')
-flist_fsedhigh=glob.glob('../a_new_new_grid/CLOUDS_DISEQ/*fsed_1.0*spec.txt')
-flist_star3300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_3300*spec.txt')
-flist_star4300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_4300*spec.txt')
-flist_star6300=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_6300*spec.txt')
-flist_star7200=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_7200*spec.txt')
-flist_star8200=glob.glob('../a_new_grid_dump/STELLAR_TEFF/*TSTAR_8200*spec.txt')
+flist_fiducial=glob.glob('./AllHotJupiterModels/Fiducial/*spec.txt')
+flist_lowCO=glob.glob('./AllHotJupiterModels/CtoO/*0.01_spec.txt')
+flist_highCO=glob.glob('./AllHotJupiterModels/CtoO/*0.85_spec.txt')
+flist_delayTiO2000=glob.glob('./AllHotJupiterModels/TiO_VO_Cold_Trap/*DELAY_TiO_VO_2000*spec.txt')
+flist_delayTiO2500=glob.glob('./AllHotJupiterModels/TiO_VO_Cold_Trap/*DELAY_TiO_VO_2500*spec.txt')
+flist_delayTiO3000=glob.glob('./AllHotJupiterModels/TiO_VO_Cold_Trap/*DELAY_TiO_VO_3000*spec.txt')
+flist_grav20=glob.glob('./AllHotJupiterModels/LogG/LOGG_2.0_*spec.txt')
+flist_grav40=glob.glob('./AllHotJupiterModels/LogG/LOGG_4.0_*spec.txt')
+flist_metneg15=glob.glob('./AllHotJupiterModels/Metallicity/*logZ_-1.5*spec.txt')
+flist_metpos15=glob.glob('./AllHotJupiterModels/Metallicity/*logZ_+1.5*spec.txt')
+flist_tintTF18=glob.glob('./AllHotJupiterModels/Tint/*TF18_TINT*spec.txt')
+flist_fsedlow=glob.glob('./AllHotJupiterModels/Clouds/*fsed_0.1*spec.txt')
+flist_fsedhigh=glob.glob('./AllHotJupiterModels/Clouds/*fsed_1.0*spec.txt')
+flist_star3300=glob.glob('./AllHotJupiterModels/Stellar_Teff/*TSTAR_3300*spec.txt')
+flist_star4300=glob.glob('./AllHotJupiterModels/Stellar_Teff/*TSTAR_4300*spec.txt')
+flist_star6300=glob.glob('./AllHotJupiterModels/Stellar_Teff/*TSTAR_6300*spec.txt')
+flist_star7200=glob.glob('./AllHotJupiterModels/Stellar_Teff/*TSTAR_7200*spec.txt')
+flist_star8200=glob.glob('./AllHotJupiterModels/Stellar_Teff/*TSTAR_8200*spec.txt')
 
-flist_bd=glob.glob('../BD_Mods/FIDUCIAL/*spec.txt')
-flist_bdmetpos1=glob.glob('../BD_Mods/logMet+1/*spec.txt')
-flist_bdmetneg1=glob.glob('../BD_Mods/logMet-1/*spec.txt')
-flist_bdlogg3=glob.glob('../BD_Mods/logg3/*spec.txt')
-flist_bdlogg4=glob.glob('../BD_Mods/logg4/*spec.txt')
-
-fpmods_fiducial=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_lowCO=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_highCO=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_delayTiO2000=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_delayTiO2500=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_delayTiO3000=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_grav20=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_grav40=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_metneg15=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_metpos15=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_star3300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-fpmods_star4300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-fpmods_star6300=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-fpmods_star7200=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-fpmods_star8200=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_star3300)[0]))
-fpmods_tintTF18=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_quench=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_fsedlow=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-fpmods_fsedhigh=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_fiducial)[0]))
-
-fpmods_bd=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bd)[0]))
-fpmods_bdmetpos1=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdmetpos1)[0]))
-fpmods_bdmetneg1=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdmetneg1)[0]))
-fpmods_bdlogg3=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdlogg3)[0]))
-fpmods_bdlogg4=np.zeros((np.shape(masterwavegrid)[0],np.shape(flist_bdlogg4)[0]))
+#Self-luminous object Sc-CHIMERA models
+flist_bd=glob.glob('./AllSelfLuminousModels/Fiducial/*spec.txt')
+flist_bdmetpos1=glob.glob('./AllSelfLuminousModels/LogMet+1/*spec.txt')
+flist_bdmetneg1=glob.glob('./AllSelfLuminousModels/LogMet-1/*spec.txt')
+flist_bdlogg3=glob.glob('./AllSelfLuminousModels/LogG_3/*spec.txt')
+flist_bdlogg4=glob.glob('./AllSelfLuminousModels/LogG_4/*spec.txt')
 bdtemplist=np.array([1000.,1200.,1400.,1600.,1800.,2000.,2200.,2400.,2600.,2800.])
 
-#to plot Mike's models all pretty
-tplist_fiducial=glob.glob('../a_grid_dump/FIDUCIAL/*TP_GAS.txt')
+fpmods_fiducial,color_fiducial=colormagmod(flist_fiducial,templist)
+fpmods_lowCO,color_lowCO=colormagmod(flist_lowCO,templist)
+fpmods_highCO,color_highCO=colormagmod(flist_highCO,templist)
+fpmods_delayTiO2000,color_delayTiO2000=colormagmod(flist_delayTiO2000,templist)
+fpmods_delayTiO2500,color_delayTiO2500=colormagmod(flist_delayTiO2500,templist)
+fpmods_delayTiO3000,color_delayTiO3000=colormagmod(flist_delayTiO3000,templist)
+fpmods_grav20,color_grav20=colormagmod(flist_grav20,templist)
+fpmods_grav40,color_grav40=colormagmod(flist_grav40,templist)
+fpmods_metneg15,color_metneg15=colormagmod(flist_metneg15,templist)
+fpmods_metpos15,color_metpos15=colormagmod(flist_metpos15,templist)
+fpmods_star3300,color_star3300=colormagmod(flist_star3300,templist)
+fpmods_star4300,color_star4300=colormagmod(flist_star4300,templist)
+fpmods_star6300,color_star6300=colormagmod(flist_star6300,templist)
+fpmods_star7200,color_star7200=colormagmod(flist_star7200,templist)
+fpmods_star8200,color_star8200=colormagmod(flist_star8200,templist)
+fpmods_tintTF18,color_tintTF18=colormagmod(flist_tintTF18,templist)
+fpmods_fsedlow,color_fsedlow=colormagmod(flist_fsedlow,templist)
+fpmods_fsedhigh,color_fsedhigh=colormagmod(flist_fsedhigh,templist)
+
+fpmods_bd,color_bd=colormagmod(flist_bd,bdtemplist,bd=True)
+fpmods_bdmetpos1,color_bdmetpos1=colormagmod(flist_bdmetpos1,bdtemplist,bd=True)
+fpmods_bdmetneg1,color_bdmetneg1=colormagmod(flist_bdmetneg1,bdtemplist,bd=True)
+fpmods_bdlogg3,color_bdlogg3=colormagmod(flist_bdlogg3,bdtemplist,bd=True)
+fpmods_bdlogg4,color_bdlogg4=colormagmod(flist_bdlogg4,bdtemplist,bd=True)
+
+##################### FIGURE 2: Plotting fiducial model grid ###################################
+tplist_fiducial=glob.glob('./AllHotJupiterModels/Fiducial/*TP_GAS.txt')
 mikemods=np.zeros((1406,np.shape(flist_fiducial)[0]))
 miketp=np.zeros((69,np.shape(flist_fiducial)[0]))
-
 for f in flist_fiducial:
-	mike=np.loadtxt(f)
+	thefile=np.loadtxt(f)
 	s1=f.split('_')
 	inds1=np.where(np.array(s1)=='Tirr')[0]
 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_fiducial[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-	mikemods[:,placer]=mike[:,1]*10**7.	#erg/s/m^2/m
+	mikewaves=thefile[:,0]	#microns
+	mikemods[:,placer]=thefile[:,1]*10**7.	#erg/s/m^2/m
 for f in tplist_fiducial:
-	mike=np.loadtxt(f)
+	thefile=np.loadtxt(f)
 	s1=f.split('_')
 	inds1=np.where(np.array(s1)=='Tirr')[0]
 	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	miketp[:,placer]=mike[:,1]
-	mikepressures=mike[:,0]
-for f in flist_lowCO:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_lowCO[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_highCO:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_highCO[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_delayTiO2000:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_delayTiO2000[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_delayTiO2500:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_delayTiO2500[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_delayTiO3000:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_delayTiO3000[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_grav20:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_grav20[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_grav40:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_grav40[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_metneg15:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_metneg15[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_metpos15:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_metpos15[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_star3300:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_star3300[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_star4300:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_star4300[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_star6300:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_star6300[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_star7200:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_star7200[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_star8200:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_star8200[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_tintTF18:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_tintTF18[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_quench:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_quench[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_fsedlow:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_fsedlow[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_fsedhigh:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Tirr')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-templist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_fsedhigh[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_bd:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Teff')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-bdtemplist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_bd[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_bdmetpos1:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Teff')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-bdtemplist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_bdmetpos1[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_bdmetneg1:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Teff')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-bdtemplist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_bdmetneg1[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_bdlogg3:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Teff')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-bdtemplist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_bdlogg3[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
-for f in flist_bdlogg4:
-	mike=np.loadtxt(f)
-	s1=f.split('_')
-	inds1=np.where(np.array(s1)=='Teff')[0]
-	placer=np.argmin(abs(float(s1[inds1[0]+1])-bdtemplist))
-	mikewaves=mike[:,0]	#microns
-	mikefluxpl=mike[:,1]*10**7.	#erg/s/m^2/m
-	fpmods_bdlogg4[:,placer]=np.interp(masterwavegrid,mikewaves,mikefluxpl)
+	miketp[:,placer]=thefile[:,1]
+	mikepressures=thefile[:,0]
 
-color_fiducial=np.zeros((np.shape(flist_fiducial)[0],3))
-color_lowCO=np.zeros((np.shape(flist_lowCO)[0],3))
-color_highCO=np.zeros((np.shape(flist_highCO)[0],3))
-color_delayTiO2000=np.zeros((np.shape(flist_delayTiO2000)[0],3))
-color_delayTiO2500=np.zeros((np.shape(flist_delayTiO2500)[0],3))
-color_delayTiO3000=np.zeros((np.shape(flist_delayTiO3000)[0],3))
-color_grav20=np.zeros((np.shape(flist_grav20)[0],3))
-color_grav40=np.zeros((np.shape(flist_grav40)[0],3))
-color_metneg15=np.zeros((np.shape(flist_metneg15)[0],3))
-color_metpos15=np.zeros((np.shape(flist_metpos15)[0],3))
-color_star3300=np.zeros((np.shape(flist_star3300)[0],3))
-color_star4300=np.zeros((np.shape(flist_star4300)[0],3))
-color_star6300=np.zeros((np.shape(flist_star6300)[0],3))
-color_star7200=np.zeros((np.shape(flist_star7200)[0],3))
-color_star8200=np.zeros((np.shape(flist_star8200)[0],3))
-color_tintTF18=np.zeros((np.shape(flist_tintTF18)[0],3))
-color_quench=np.zeros((np.shape(flist_quench)[0],3))
-color_fsedlow=np.zeros((np.shape(flist_fsedlow)[0],3))
-color_fsedhigh=np.zeros((np.shape(flist_fsedhigh)[0],3))
-color_bd=np.zeros((np.shape(flist_bd)[0],3))
-color_bdmetpos1=np.zeros((np.shape(flist_bdmetpos1)[0],3))
-color_bdmetneg1=np.zeros((np.shape(flist_bdmetneg1)[0],3))
-color_bdlogg3=np.zeros((np.shape(flist_bdlogg3)[0],3))
-color_bdlogg4=np.zeros((np.shape(flist_bdlogg4)[0],3))
+n=np.shape(templist)[0]
+colors=pl.cm.plasma(np.linspace(0,0.9,n))
 
-for i in np.arange(np.shape(flist_fiducial)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_fiducial[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_fiducial[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_fiducial[:,i][inset])
-	color_fiducial[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_lowCO)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_lowCO[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_lowCO[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_lowCO[:,i][inset])
-	color_lowCO[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_highCO)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_highCO[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_highCO[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_highCO[:,i][inset])
-	color_highCO[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_delayTiO2000)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_delayTiO2000[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO2000[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO2000[:,i][inset])
-	color_delayTiO2000[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_delayTiO2500)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_delayTiO2500[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO2500[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO2500[:,i][inset])
-	color_delayTiO2500[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_delayTiO3000)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_delayTiO3000[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_delayTiO3000[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_delayTiO3000[:,i][inset])
-	color_delayTiO3000[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_grav20)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_grav20[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_grav20[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_grav20[:,i][inset])
-	color_grav20[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_grav40)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_grav40[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_grav40[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_grav40[:,i][inset])
-	color_grav40[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_metneg15)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_metneg15[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_metneg15[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_metneg15[:,i][inset])
-	color_metneg15[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_metpos15)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_metpos15[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_metpos15[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_metpos15[:,i][inset])
-	color_metpos15[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_star3300)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_star3300[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star3300[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star3300[:,i][inset])
-	color_star3300[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_star4300)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_star4300[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star4300[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star4300[:,i][inset])
-	color_star4300[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_star6300)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_star6300[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star6300[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star6300[:,i][inset])
-	color_star6300[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_star7200)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_star7200[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star7200[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star7200[:,i][inset])
-	color_star7200[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_star8200)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_star8200[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_star8200[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_star8200[:,i][inset])
-	color_star8200[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_tintTF18)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_tintTF18[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_tintTF18[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_tintTF18[:,i][inset])
-	color_tintTF18[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_quench)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_quench[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_quench[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_quench[:,i][inset])
-	color_quench[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_fsedlow)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_fsedlow[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_fsedlow[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_fsedlow[:,i][inset])
-	color_fsedlow[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_fsedhigh)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_fsedhigh[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_fsedhigh[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_fsedhigh[:,i][inset])
-	color_fsedhigh[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_bd)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_bd[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_bd[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_bd[:,i][inset])
-	color_bd[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_bdmetpos1)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_bdmetpos1[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_bdmetpos1[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_bdmetpos1[:,i][inset])
-	color_bdmetpos1[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_bdmetneg1)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_bdmetneg1[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_bdmetneg1[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_bdmetneg1[:,i][inset])
-	color_bdmetneg1[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_bdlogg3)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_bdlogg3[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_bdlogg3[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_bdlogg3[:,i][inset])
-	color_bdlogg3[i]=colormagmod(outpoint1,outpoint2,inpoint)
-for i in np.arange(np.shape(flist_bdlogg4)[0]):
-	outpoint1=trapezoidint(masterwavegrid[outset1]*10**-6.,fpmods_bdlogg4[:,i][outset1])
-	outpoint2=trapezoidint(masterwavegrid[outset2]*10**-6.,fpmods_bdlogg4[:,i][outset2])
-	inpoint=trapezoidint(masterwavegrid[inset]*10**-6.,fpmods_bdlogg4[:,i][inset])
-	color_bdlogg4[i]=colormagmod(outpoint1,outpoint2,inpoint)
+rc('axes',linewidth=2)
+fig,(ax1,ax2,ax3)=plt.subplots(3,1,figsize=(12,21))
+for i in np.arange(np.shape(templist)[0]/2.)*2.:
+	ax2.plot(mikewaves,mikemods[:,int(i)],color=colors[int(i)],linewidth=3,zorder=1)
+ax2.set_xlim((1.0,1.8))
+ax2.axvspan(1.22,1.33,color='k',alpha=0.2,zorder=0)
+ax2.axvspan(1.53,1.61,color='k',alpha=0.2,zorder=0)
+ax2.axvspan(1.35,1.48,color='k',alpha=0.2,zorder=0)
+ax2.set_yscale('log')
+ax2.set_ylim((1.*10.**13.,7.*10**19.))
+ax2.set_xlabel('Wavelength [$\mu$m]',fontsize=20)
+ax2.set_ylabel('Planet Flux [erg/s/m$^{3}$]',fontsize=20)
+ax2.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax2.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
+
+for i in np.arange(np.shape(templist)[0]/2.)*2.:
+	ax1.plot(miketp[:,int(i)],mikepressures,color=colors[int(i)],linewidth=3,zorder=1)
+ax1.set_xlim((500,4000))
+ax1.set_yscale('log')
+ax1.set_ylim((2*10.**2,5*10.**-4.))
+ax1.set_xlabel('Temperature [K]',fontsize=20)
+ax1.set_ylabel('Pressure [bar]',fontsize=20)
+ax1.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax1.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
+
+opacityfile=np.loadtxt('opacity.txt')
+
+ax3.plot(opacityfile[:,1]/opacityfile[:,2],opacityfile[:,0],color='k',linewidth=3,zorder=1)
+ax3.axvline(x=1,color='k',linestyle=':',linewidth=3,zorder=0)
+ax3.set_xscale('log')
+ax3.set_xlabel('$K_{J}$/$K_{B}$',fontsize=20)
+ax3.set_ylabel('T$_{eq}$ [K]',fontsize=20)
+ax3.invert_xaxis()
+ax3.set_xticks([0.01,0.1,1])
+ax3.set_xticklabels(['0.01','0.1','1'])
+ax3.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
+ax3.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
+
+plt.tight_layout()
+plt.savefig('models.png',dpi=300)
+plt.show()
 
 ################################################## DATA SETS ##############################
-#read in the data (13 data sets we will analyze) - data go wavelength, flux, flux err
-C2=np.loadtxt('../EclipsesPaper/CoRoT2.txt') #ppm
-H7=np.loadtxt('../EclipsesPaper/HAT7.txt') #ppm
-H32=np.loadtxt('../EclipsesPaper/HAT32A.txt') #ppm
-H41=np.loadtxt('../EclipsesPaper/hat41_new.txt') #percent
-HD189=np.loadtxt('../EclipsesPaper/HD189733.txt') #ppm
-HD209=np.loadtxt('../EclipsesPaper/HD209458.txt') #ppm
-K7=np.loadtxt('../EclipsesPaper/kelt7_new.txt') #percent
-Kep13=np.loadtxt('../EclipsesPaper/kep13_mostrecent.txt') #percent
-T3=np.loadtxt('../EclipsesPaper/TrES3.txt') #ppm
-W4=np.loadtxt('../EclipsesPaper/WASP4.txt') #ppm
-W12=np.loadtxt('../EclipsesPaper/WASP12.txt') #ppm
-W18=np.loadtxt('../EclipsesPaper/WASP18.txt') #ppm
-W33=np.loadtxt('../EclipsesPaper/WASP33.txt') #ppm
-W43=np.loadtxt('../EclipsesPaper/WASP43.txt') #ppm
-W74=np.loadtxt('../EclipsesPaper/wasp74_new.txt') #percent
-W76=np.loadtxt('../EclipsesPaper/WASP76_starcorr.txt') #percent
-W79=np.loadtxt('../EclipsesPaper/wasp79_new.txt') #percent
-W103=np.loadtxt('../EclipsesPaper/WASP103.txt') #ppm
-W121=np.loadtxt('../EclipsesPaper/wasp121_allvis.txt') #percent
+#read in the data - data go wavelength, flux, flux err
+C2=np.loadtxt('../EclipsesPaper/CoRoT2.txt')
+H7=np.loadtxt('../EclipsesPaper/HAT7.txt')
+H32=np.loadtxt('../EclipsesPaper/HAT32A.txt')
+H41=np.loadtxt('../EclipsesPaper/hat41_new.txt')
+HD189=np.loadtxt('../EclipsesPaper/HD189733.txt')
+HD209=np.loadtxt('../EclipsesPaper/HD209458.txt')
+K7=np.loadtxt('../EclipsesPaper/kelt7_new.txt')
+Kep13=np.loadtxt('../EclipsesPaper/kep13_mostrecent.txt')
+T3=np.loadtxt('../EclipsesPaper/TrES3.txt')
+W4=np.loadtxt('../EclipsesPaper/WASP4.txt')
+W12=np.loadtxt('../EclipsesPaper/WASP12.txt')
+W18=np.loadtxt('../EclipsesPaper/WASP18.txt')
+W33=np.loadtxt('../EclipsesPaper/WASP33.txt')
+W43=np.loadtxt('../EclipsesPaper/WASP43.txt')
+W74=np.loadtxt('../EclipsesPaper/wasp74_new.txt')
+W76=np.loadtxt('../EclipsesPaper/WASP76_starcorr.txt')
+W79=np.loadtxt('../EclipsesPaper/wasp79_new.txt')
+W103=np.loadtxt('../EclipsesPaper/WASP103.txt')
+W121=np.loadtxt('../EclipsesPaper/wasp121_allvis.txt')
 
+def colormagdata2(datfile,Teff,Tserr,met,logg,rprs):#(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
+	#downsample through interpolation to the master wavelength grid
+	downsamplewave=np.interp(masterwavegrid,datfile[:,0],datfile[:,1]*10**-6.)
+	outpoint1=np.mean(downsamplewave[outset1])
+	outpoint2=np.mean(downsamplewave[outset2])
+	inpoint=np.mean(downsamplewave[inset])
+	meanerr=np.mean(datfile[:,2]*10.**-6.)
+	dellam=np.mean(np.diff(datfile[:,0]))
+	sp = S.Icat('k93models',Teff,met,logg)
+	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave=sp.wave*10.**-10  #in meters
+	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp=np.interp(masterwavegrid,wave*10**6.,flux)
+	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
+	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
+	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
+	sp2 = S.Icat('k93models',Teff+Tserr,met,logg)
+	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave2=sp2.wave*10.**-10  #in meters
+	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
+	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
+	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
+	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
+	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
+	Fpout2=outpoint2*starout2/rprs**2.
+	Fpin=inpoint*starin/rprs**2.
+	# Fs=np.array([starout1,starout2,starin])
+	# Fs2=np.array([starout12,starout22,starin2])
+#def colormagdata(outpoint1,outpoint2,inpoint,meanerr,dellam,Fs,Fs2,rprs):
+	#colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
+	outflux=np.array([Fpout1,Fpout2])
+	wave=np.array([(edgewave2+edgewave1)/2.,(edgewave6+edgewave5)/2.])
+	diff2=np.array([(edgewave2-edgewave1),(edgewave6-edgewave5)])
+	params0=np.array([1000.])
+	mpfit=leastsq(bbod2point,params0,args=(wave,diff2,outflux))
+	fakeinflux=make_bbod(np.array([(edgewave4+edgewave3)/2.]),np.array([(edgewave4-edgewave3)]),mpfit[0][0])
+	outerr1=meanerr*starout1/rprs**2.*np.sqrt(dellam/(edgewave2-edgewave1))
+	temp=Fpout1*(starout1-starout12)/starout1
+	couterr1=np.sqrt(outerr1**2.+temp**2.)
+	outerr2=meanerr*starout2/rprs**2.*np.sqrt(dellam/(edgewave6-edgewave5))
+	temp=Fpout2*(starout2-starout22)/starout2
+	couterr2=np.sqrt(outerr2**2.+temp**2.)
+	inerr=meanerr*starin/rprs**2.*np.sqrt(dellam/(edgewave4-edgewave3))
+	temp=Fpin*(starin-starin2)/starin
+	cinerr=np.sqrt(inerr**2.+temp**2.)
+	netoerr=np.sqrt(couterr1**2.+couterr2**2.)
+	magerr=np.log10((netoerr+fakeinflux)/fakeinflux)
+	colorerr=np.sqrt(netoerr**2./(fakeinflux**2.*np.log(10.)**2.)+cinerr**2./(inpoint**2.*np.log(10.)**2.))
+	return mpfit[0][0],np.log10(fakeinflux),(np.log10(fakeinflux)-np.log10(inpoint)),magerr,colorerr
+
+def getcolor(Teff,Tserr,met,logg,rprs,outpoint1,outpoint2,inpoint,meanerr,dellam):
+	sp = S.Icat('k93models',Teff,met,logg)
+	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave=sp.wave*10.**-10  #in meters
+	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp=np.interp(masterwavegrid,wave*10**6.,flux)
+	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
+	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
+	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
+	sp2 = S.Icat('k93models',Teff+Tserr,met,logg)
+	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
+	wave2=sp2.wave*10.**-10  #in meters
+	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
+	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
+	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
+	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
+	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
+	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
+	Fpout2=outpoint2*starout2/rprs**2.
+	Fpin=inpoint*starin/rprs**2.
+	Fs=np.array([starout1,starout2,starin])
+	Fs2=np.array([starout12,starout22,starin2])
+	color=colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
+	return color
 #downsample through interpolation to the master wavelength grid
+H7colortest=colormagdata2(H7,6441.,69.,0.15,4.02,0.07809)
+
 H7down=np.interp(masterwavegrid,H7[:,0],H7[:,1]*10.**-6.)
 H32down=np.interp(masterwavegrid,H32[:,0],H32[:,1]*10.**-6.)
 H41down=np.interp(masterwavegrid,H41[:,0],H41[:,1]*10.**-2.)
@@ -631,31 +437,6 @@ outpoint1W12=np.mean(W12down[outset1])
 outpoint2W12=np.mean(W12down[outset2])
 inpointW12=np.mean(W12down[inset])
 
-def getcolor(Teff,Tserr,met,logg,rprs,outpoint1,outpoint2,inpoint,meanerr,dellam):
-	sp = S.Icat('k93models',Teff,met,logg)
-	sp.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave=sp.wave*10.**-10  #in meters
-	flux = sp.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp=np.interp(masterwavegrid,wave*10**6.,flux)
-	starout1=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp[outset1])	#unit erg/s/m^2
-	starout2=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp[outset2])
-	starin=trapezoidint(masterwavegrid[inset]*10.**-6.,interp[inset])
-	sp2 = S.Icat('k93models',Teff+Tserr,met,logg)
-	sp2.convert('flam') ## initial units erg/cm^2/s/Angstrom
-	wave2=sp2.wave*10.**-10  #in meters
-	flux2 = sp2.flux*10.**4*10.**10 #in erg/m2/m/s
-	interp2=np.interp(masterwavegrid,wave2*10**6.,flux2)
-	starout12=trapezoidint(masterwavegrid[outset1]*10.**-6.,interp2[outset1])	#unit erg/s/m^2
-	starout22=trapezoidint(masterwavegrid[outset2]*10.**-6.,interp2[outset2])
-	starin2=trapezoidint(masterwavegrid[inset]*10.**-6.,interp2[inset])
-	Fpout1=outpoint1*starout1/rprs**2.	#unit erg/s/m^2
-	Fpout2=outpoint2*starout2/rprs**2.
-	Fpin=inpoint*starin/rprs**2.
-	Fs=np.array([starout1,starout2,starin])
-	Fs2=np.array([starout12,starout22,starin2])
-	color=colormagdata(Fpout1,Fpout2,Fpin,meanerr,dellam,Fs,Fs2,rprs)
-	return color
-
 meanerrH7=np.mean(H7[:,2]*10.**-6.)
 meanerrH32=np.mean(H32[:,2]*10.**-6.)
 meanerrH41=np.mean(H41[:,2]*10.**-2.)
@@ -676,12 +457,6 @@ meanerrKep13=np.mean(Kep13[:,2]*10.**-2.)
 meanerrT3=np.mean(T3[:,2]*10.**-6.)
 meanerrW4=np.mean(W4[:,2]*10.**-6.)
 meanerrW12=np.mean(W12[:,2]*10.**-6.)
-
-meanerrW121v2=np.mean(W121v2[:,2]*10**-6.)
-meanerrW76v2=np.mean(W76v2[:,2]*10**-6.)
-meanerrW76v3=np.mean(W76v3[:,2]*10**-6.)
-meanerrKep13v2=np.mean(Kep13v2[:,2]*10**-6.)
-meanerrK7v2=np.mean(K7v2[:,2]*10**-6.)
 
 dellamH7=np.mean(np.diff(H7[:,0]))
 dellamH32=np.mean(np.diff(H32[:,0]))
@@ -704,12 +479,6 @@ dellamT3=np.mean(np.diff(T3[:,0]))
 dellamW4=np.mean(np.diff(W4[:,0]))
 dellamW12=np.mean(np.diff(W12[:,0]))
 
-dellamW121v2=np.mean(np.diff(W121v2[:,0]))
-dellamW76v2=np.mean(np.diff(W76v2[:,0]))
-dellamW76v3=np.mean(np.diff(W76v3[:,0]))
-dellamKep13v2=np.mean(np.diff(Kep13v2[:,0]))
-dellamK7v2=np.mean(np.diff(K7v2[:,0]))
-
 #param order: Teff, Tserr, met, logg, rprs, outpoint1, outpoint2, inpoint, meanerr, dellam
 colorH7=getcolor(6441.,69.,0.15,4.02,0.07809,outpoint1H7,outpoint2H7,inpointH7,meanerrH7,dellamH7)
 colorH32=getcolor(6207.,88.,-0.04,4.33,0.1478,outpoint1H32,outpoint2H32,inpointH32,meanerrH32,dellamH32)
@@ -731,12 +500,6 @@ colorKep13=getcolor(7650.,250.,0.2,4.2,0.08047,outpoint1Kep13,outpoint2Kep13,inp
 colorT3=getcolor(5514.,69.,-0.2,4.57,0.1619,outpoint1T3,outpoint2T3,inpointT3,meanerrT3,dellamT3)
 colorW4=getcolor(5500.,100.,-0.03,4.5,0.1485,outpoint1W4,outpoint2W4,inpointW4,meanerrW4,dellamW4)
 colorW12=getcolor(6118.,64.,0.07,4.14,0.115,outpoint1W12,outpoint2W12,inpointW12,meanerrW12,dellamW12)
-
-colorW121v2=getcolor(6460.,140.,0.13,4.2,0.1245,outpoint1W121v2,outpoint2W121v2,inpointW121v2,meanerrW121v2,dellamW121v2)
-colorW76v2=getcolor(6250.,100.,0.23,4.128,0.10873,outpoint1W76v2,outpoint2W76v2,inpointW76v2,meanerrW76v2,dellamW76v2)
-colorW76v3=getcolor(6250.,100.,0.23,4.128,0.10873,outpoint1W76v3,outpoint2W76v3,inpointW76v3,meanerrW76v3,dellamW76v3)
-colorKep13v2=getcolor(7650.,250.,0.2,4.2,0.08047,outpoint1Kep13v2,outpoint2Kep13v2,inpointKep13v2,meanerrKep13v2,dellamKep13v2)
-colorK7v2=getcolor(6789.,50.,0.139,4.149,0.0888,outpoint1K7v2,outpoint2K7v2,inpointK7v2,meanerrK7v2,dellamK7v2)
 
 ####################### Adding Brown Dwarfs from Manjavacas et al. (2019) #########################################
 bddatalist=glob.glob('./ManjavacasData/*.txt')
@@ -1334,49 +1097,5 @@ chi2red_bdmetpos1=chi2_bdmetpos1/numpoints
 signif_bdmetpos1=stats.chi2.sf(chi2_bdmetpos1,numpoints)
 sigma_bdmetpos1=special.erfinv(1-signif_bdmetpos1)*np.sqrt(2.)
 
-##################### FIGURE 2 ###################################
-n=np.shape(templist)[0]
-colors=pl.cm.plasma(np.linspace(0,0.9,n))
 
-rc('axes',linewidth=2)
-fig,(ax1,ax2,ax3)=plt.subplots(3,1,figsize=(12,21))
-for i in np.arange(np.shape(templist)[0]/2.)*2.:
-	ax2.plot(mikewaves,mikemods[:,int(i)],color=colors[int(i)],linewidth=3,zorder=1)
-ax2.set_xlim((1.0,1.8))
-ax2.axvspan(1.22,1.33,color='k',alpha=0.2,zorder=0)
-ax2.axvspan(1.53,1.61,color='k',alpha=0.2,zorder=0)
-ax2.axvspan(1.35,1.48,color='k',alpha=0.2,zorder=0)
-ax2.set_yscale('log')
-ax2.set_ylim((1.*10.**13.,7.*10**19.))
-ax2.set_xlabel('Wavelength [$\mu$m]',fontsize=20)
-ax2.set_ylabel('Planet Flux [erg/s/m$^{3}$]',fontsize=20)
-ax2.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-ax2.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-
-for i in np.arange(np.shape(templist)[0]/2.)*2.:
-	ax1.plot(miketp[:,int(i)],mikepressures,color=colors[int(i)],linewidth=3,zorder=1)
-ax1.set_xlim((500,4000))
-ax1.set_yscale('log')
-ax1.set_ylim((2*10.**2,5*10.**-4.))
-ax1.set_xlabel('Temperature [K]',fontsize=20)
-ax1.set_ylabel('Pressure [bar]',fontsize=20)
-ax1.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-ax1.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-
-opacityfile=np.loadtxt('opacity.txt')
-
-ax3.plot(opacityfile[:,1]/opacityfile[:,2],opacityfile[:,0],color='k',linewidth=3,zorder=1)
-ax3.axvline(x=1,color='k',linestyle=':',linewidth=3,zorder=0)
-ax3.set_xscale('log')
-ax3.set_xlabel('$K_{J}$/$K_{B}$',fontsize=20)
-ax3.set_ylabel('T$_{eq}$ [K]',fontsize=20)
-ax3.invert_xaxis()
-ax3.set_xticks([0.01,0.1,1])
-ax3.set_xticklabels(['0.01','0.1','1'])
-ax3.tick_params(labelsize=20,axis="both",top=True,right=True,width=2,length=8,direction='in')
-ax3.tick_params(which='minor',axis="both",right=True,width=1,length=4,direction='in')
-
-plt.tight_layout()
-plt.savefig('models.png',dpi=300)
-plt.show()
 
