@@ -38,13 +38,6 @@ def trapezoidint(xvals,yvals):
 		total+=(yvals[i]+yvals[i+1])*(xvals[i+1]-xvals[i])*0.5
 	return total
 
-def blackbodyintegrate(wavelength1,wavelength2,temp):
-	total=0
-	waveset=np.linspace(wavelength1,wavelength2,10)
-	for i in np.arange(9):
-		total+=(waveset[i+1]-waveset[i])*((2.0*h*(c**2)/((waveset[i+1])**5)/(np.exp(h*c/(waveset[i+1])/kb/temp)-1))+(2.0*h*(c**2)/((waveset[i])**5)/(np.exp(h*c/(waveset[i])/kb/temp)-1)))/2.*np.pi
-	return total
-
 def planetstarflux(planetT,Startemp,Starm,Starlogg,diff,rp):
 	outputwave=np.linspace(1.0*10**-6,2.0*10**-6,2000)
 	outputthermal=np.zeros(np.shape(outputwave)[0])
@@ -71,14 +64,15 @@ def planetstarflux(planetT,Startemp,Starm,Starlogg,diff,rp):
 	return smoothed
 
 waves=np.linspace(1.0*10**-6,2.0*10**-6,2000)
-smoothedH41=planetstarflux(2409.,6390.,0.21,4.14,np.mean(np.diff(H41[:,0]))*10**-6.,0.1028)
-smoothedK7=planetstarflux(2411.,6789.,0.139,4.149,np.mean(np.diff(K7[:,0]))*10**-6.,0.0888)
-smoothedW74=planetstarflux(2273.,5990.,0.39,4.39,np.mean(np.diff(W74[:,0]))*10**-6.,0.09803)
-smoothedW76=planetstarflux(2557.,6250.,0.23,4.128,np.mean(np.diff(W76[:,0]))*10**-6.,0.109)
-smoothedW79=planetstarflux(1899.,6600.,0.03,4.2,np.mean(np.diff(W79[:,0]))*10**-6.,0.1049)
-smoothedW121=planetstarflux(2656.,6460.,0.13,4.2,np.mean(np.diff(W121[:,0]))*10**-6.,0.1245)
-smoothedW121v2=planetstarflux(2657.,6460.,0.13,4.2,np.mean(np.diff(W121v2[:,0]))*10**-6.,0.1245)
-smoothedKep13=planetstarflux(3383.,7650.,0.2,4.2,np.mean(np.diff(Kep13[:,0]))*10**-6.,0.08047)
+allplanetparams=np.loadtxt('planetparams.txt')
+
+smoothedH41=planetstarflux(allplanetparams[3,5],allplanetparams[3,0],allplanetparams[3,2],allplanetparams[3,3],np.mean(np.diff(H41[:,0]))*10**-6.,allplanetparams[3,4])
+smoothedK7=planetstarflux(allplanetparams[6,5],allplanetparams[6,0],allplanetparams[6,2],allplanetparams[6,3],np.mean(np.diff(K7[:,0]))*10**-6.,allplanetparams[6,4])
+smoothedW74=planetstarflux(allplanetparams[14,5],allplanetparams[14,0],allplanetparams[14,2],allplanetparams[14,3],np.mean(np.diff(W74[:,0]))*10**-6.,allplanetparams[14,4])
+smoothedW76=planetstarflux(allplanetparams[15,5],allplanetparams[15,0],allplanetparams[15,2],allplanetparams[15,3],np.mean(np.diff(W76[:,0]))*10**-6.,allplanetparams[15,4])
+smoothedW79=planetstarflux(allplanetparams[16,5],allplanetparams[16,0],allplanetparams[16,2],allplanetparams[16,3],np.mean(np.diff(W79[:,0]))*10**-6.,allplanetparams[16,4])
+smoothedW121=planetstarflux(allplanetparams[18,5],allplanetparams[18,0],allplanetparams[18,2],allplanetparams[18,3],np.mean(np.diff(W121[:,0]))*10**-6.,allplanetparams[18,4])
+smoothedKep13=planetstarflux(allplanetparams[7,5],allplanetparams[7,0],allplanetparams[7,2],allplanetparams[7,3],np.mean(np.diff(Kep13[:,0]))*10**-6.,allplanetparams[7,4])
 
 rc('axes',linewidth=2)
 
@@ -114,13 +108,13 @@ ax7.plot(waves*10**6.,smoothedKep13*10**6.,color='k',linewidth=3,zorder=0,linest
 fig.text(0.03,0.5,r'F$_{\mathrm{p}}$/F$_{\mathrm{s}}$ [ppm]',fontsize=20,verticalalignment='center',rotation='vertical')
 ax6.set_xlabel(r'Wavelength [$\mu$m]',fontsize=20)
 ax7.set_xlabel(r'Wavelength [$\mu$m]',fontsize=20)
-ax3.set_title(r'HAT-P-41b, $T_{day}=2409$ K',fontsize=15)
-ax4.set_title(r'KELT-7b, $T_{day}=2411$ K',fontsize=15)
-ax2.set_title(r'WASP-74b, $T_{day}=2273$ K',fontsize=15)
-ax5.set_title(r'WASP-76b, $T_{day}=2557$ K',fontsize=15)
-ax1.set_title(r'WASP-79b, $T_{day}=1899$ K',fontsize=15)
-ax6.set_title(r'WASP-121b, $T_{day}=2657$ K',fontsize=15)
-ax7.set_title(r'Kepler-13Ab, $T_{day}=3383$ K',fontsize=15)
+ax3.set_title(r'HAT-P-41b, $T_{day}=2411$ K',fontsize=15)
+ax4.set_title(r'KELT-7b, $T_{day}=2424$ K',fontsize=15)
+ax2.set_title(r'WASP-74b, $T_{day}=2269$ K',fontsize=15)
+ax5.set_title(r'WASP-76b, $T_{day}=2560$ K',fontsize=15)
+ax1.set_title(r'WASP-79b, $T_{day}=1886$ K',fontsize=15)
+ax6.set_title(r'WASP-121b, $T_{day}=2662$ K',fontsize=15)
+ax7.set_title(r'Kepler-13Ab, $T_{day}=3385$ K',fontsize=15)
 ax1.set_xlim(1.1,1.75)
 ax2.set_xlim(1.1,1.75)
 ax3.set_xlim(1.1,1.75)
